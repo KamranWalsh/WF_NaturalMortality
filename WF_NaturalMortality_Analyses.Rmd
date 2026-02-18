@@ -1,0 +1,1655 @@
+---
+title: "WF_NaturalMortality_Analyses"
+author: "Kamran Walsh"
+date: "2026-02-10"
+output: html_document
+---
+
+Code for running analyses for WF natural mortality project
+
+Load packages
+```{r}
+library(dplyr)
+library(tidyr)
+library(data.table)
+library(mgcv)
+library(purrr)
+library(GGally)
+library(tibble)
+library(mgcv)
+library(gratia)
+```
+
+#CATCH-AT-AGE COMPOSITIONS w/PLUS GROUP 10+ 
+
+#Index catch-at-age code for GB 
+```{r}
+#the code for plotting the age comps is from the WHAM source code 
+
+bubble.col = "white"
+
+GB_agecomps <- read.csv("~/Desktop/StockAssessmentPracticum/WF_NaturalMortality/STOCKEFF_SV_172905_GBK_NONE_strat_mean_age.csv")
+
+#turn file into asap matrix format 
+GB_agecomps_filter <- na.omit(GB_agecomps)
+
+GB_agecomps_matrix <- GB_agecomps_filter %>% 
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>%
+  pivot_wider(
+    names_from = AGE,
+    values_from = NO_AT_AGE
+  )
+col_nums <- sort(as.numeric(names(GB_agecomps_matrix[4:24])))
+GB_agecomps_matrix <- GB_agecomps_matrix %>%
+  select(STOCK_ABBREV, SEASON, YEAR, all_of(as.character(col_nums)))
+
+#PLOT AGE COMPS BY SEASON 
+
+#GB spring 
+
+#arrange data 
+GB_agecomps_matrix_spring <- GB_agecomps_matrix %>% filter(SEASON == "SPRING") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = GB_agecomps_matrix_spring$YEAR
+nyrs = length(years)
+ages = c(0:10)
+ages.lab = c(as.character(ages[1:10]), "10+")
+n_ages = length(ages)
+
+#calculate proportion-at-age 
+#acomp.obs = GB_agecomps_matrix_spring %>% select(4:24)
+
+acomp.obs = GB_agecomps_matrix_spring %>% mutate('10' = rowSums(GB_agecomps_matrix_spring[, 14:24], na.rm = TRUE)) %>% select(4:14)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(GB_agecomps_matrix_spring)
+
+#plot
+my.title <- paste0("Catch-at-Age for GB NMFS Spring Survey")
+  origpar <- par(no.readonly = TRUE)
+  par(mar=c(4,4,2,2), oma=c(1,1,1,1), mfrow=c(1,1))
+  scale.catch.obs <- 5
+  z3 <- as.matrix(acomp.obs)# * scale.catch.obs
+
+  plot(ages, rev(ages),  xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "Age", ylab = "", type = "n", axes=FALSE)
+  axis(1, at= ages, lab = ages.lab) #change this depending on plus group 
+  axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+  box()
+  abline(h=years, col="lightgrey")
+  segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgrey", lty = 1)
+  if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black",# bg = bubble.col,
+                                                    pch = 21)
+
+  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  title (my.title, outer=TRUE, line=-1)
+  par(origpar)
+  
+#GB Fall
+#arrange data 
+GB_agecomps_matrix_fall <- GB_agecomps_matrix %>% filter(SEASON == "FALL") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = GB_agecomps_matrix_fall$YEAR
+nyrs = length(years)
+ages = c(0:10)
+ages.lab = c(as.character(ages[1:10]), "10+")
+n_ages = length(ages)
+
+#calculate proportion-at-age 
+#acomp.obs = GB_agecomps_matrix_fall %>% select(4:24)
+
+acomp.obs = GB_agecomps_matrix_fall %>% mutate('10' = rowSums(GB_agecomps_matrix_fall[, 14:24], na.rm = TRUE)) %>% select(4:14)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(GB_agecomps_matrix_fall)
+
+#plot
+my.title <- paste0("Catch-at-Age for GB NMFS Fall Survey")
+  origpar <- par(no.readonly = TRUE)
+  par(mar=c(4,4,2,2), oma=c(1,1,1,1), mfrow=c(1,1))
+  scale.catch.obs <- 5
+  z3 <- as.matrix(acomp.obs) #* scale.catch.obs
+
+  plot(ages, rev(ages),  xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "Age", ylab = "", type = "n", axes=FALSE)
+  axis(1, at= ages, lab = ages.lab)
+  axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+  box()
+  abline(h=years, col="lightgrey")
+  segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgrey", lty = 1)
+  if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black",# bg = bubble.col,
+                                                    pch = 21)
+
+  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  title (my.title, outer=TRUE, line=-1)
+  par(origpar)
+```
+
+#Index catch-at-age code for GOM
+```{r}
+bubble.col = "white"
+
+GOM_agecomps <- read.csv("~/Desktop/StockAssessmentPracticum/WF_NaturalMortality/STOCKEFF_SV_172905_GOM_NONE_strat_mean_age.csv")
+
+#different surveys -> NMFS BTS + MADMF
+
+#NMFS BTS
+
+#turn file into asap matrix format 
+GOM_agecomps_filter <- na.omit(GOM_agecomps)
+
+GOM_agecomps_matrix_nmfs <- GOM_agecomps_filter %>%
+  filter(grepl("NMFS", SURVEY)) %>%
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>%
+  pivot_wider(
+    names_from = AGE,
+    values_from = NO_AT_AGE
+  )
+col_nums <- sort(as.numeric(names(GOM_agecomps_matrix_nmfs[4:19])))
+GOM_agecomps_matrix_nmfs <- GOM_agecomps_matrix_nmfs %>%
+  select(STOCK_ABBREV, SEASON, YEAR, all_of(as.character(col_nums))) 
+
+#PLOT AGE COMPS BY SEASON 
+
+#GOM spring 
+
+#arrange data 
+GOM_agecomps_matrix_nmfs_spring <- GOM_agecomps_matrix_nmfs %>% filter(SEASON == "SPRING") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = GOM_agecomps_matrix_nmfs_spring$YEAR
+nyrs = length(years)
+ages = c(0:7)
+ages.lab = c(as.character(ages[1:7]), "7+")
+n_ages = length(ages)
+
+#calculate proportion-at-age 
+#acomp.obs = GOM_agecomps_matrix_nmfs_spring %>% select(4:19)
+
+acomp.obs = GOM_agecomps_matrix_nmfs_spring %>% mutate('7' = rowSums(GOM_agecomps_matrix_nmfs_spring[, 11:19], na.rm = TRUE)) %>% select(4:11)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(GOM_agecomps_matrix_nmfs_spring)
+
+#plot
+my.title <- paste0("NEFSC Bottom Trawl Survey GOM Spring Abundance-at-Age")
+  origpar <- par(no.readonly = TRUE)
+  par(mar=c(4,4,2,2), oma=c(1,1,1,1), mfrow=c(1,1))
+  scale.catch.obs <- 5
+  z3 <- as.matrix(acomp.obs) # * scale.catch.obs
+
+  plot(ages, rev(ages),  xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "Age", ylab = "", type = "n", axes=FALSE)
+  axis(1, at= ages, lab = ages.lab)
+  axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+  box()
+  abline(h=years, col="lightgray")
+  segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+  if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
+                                                    pch = 21)
+
+  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  title (my.title, outer=TRUE, line=-1)
+  par(origpar)
+  
+#GOM Fall
+  
+#arrange data 
+GOM_agecomps_matrix_nmfs_fall <- GOM_agecomps_matrix_nmfs %>% filter(SEASON == "FALL") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = GOM_agecomps_matrix_nmfs_fall$YEAR
+nyrs = length(years)
+ages = c(0:7)
+ages.lab = c(as.character(ages[1:7]), "7+")
+n_ages = length(ages)
+
+#calculate proportion-at-age 
+#acomp.obs = GOM_agecomps_matrix_nmfs_fall %>% select(4:19)
+
+acomp.obs = GOM_agecomps_matrix_nmfs_fall %>% mutate('7' = rowSums(GOM_agecomps_matrix_nmfs_fall[, 11:19], na.rm = TRUE)) %>% select(4:11)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(GOM_agecomps_matrix_nmfs_fall)
+
+#plot
+my.title <- paste0("NEFSC Bottom Trawl Survey GOM Fall Abundance-at-Age")
+  origpar <- par(no.readonly = TRUE)
+  par(mar=c(4,4,2,2), oma=c(1,1,1,1), mfrow=c(1,1))
+  scale.catch.obs <- 5
+  z3 <- as.matrix(acomp.obs) #* scale.catch.obs
+
+  plot(ages, rev(ages),  xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "Age", ylab = "", type = "n", axes=FALSE)
+  axis(1, at= ages, lab = ages.lab)
+  axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+  box()
+  abline(h=years, col="lightgray")
+  segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+  if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
+                                                    pch = 21)
+
+  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  title (my.title, outer=TRUE, line=-1)
+  par(origpar)
+
+#MADMF -> no need to make plus group correction since this isn't going in paper 
+
+#turn file into asap matrix format 
+GOM_agecomps_filter <- na.omit(GOM_agecomps)
+
+GOM_agecomps_matrix_madmf <- GOM_agecomps_filter %>%
+  filter(grepl("MADMF", SURVEY)) %>%
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>%
+  pivot_wider(
+    names_from = AGE,
+    values_from = NO_AT_AGE
+  )
+col_nums <- sort(as.numeric(names(GOM_agecomps_matrix_madmf[4:19])))
+GOM_agecomps_matrix_madmf <- GOM_agecomps_matrix_madmf %>%
+  select(STOCK_ABBREV, SEASON, YEAR, all_of(as.character(col_nums)))
+
+#PLOT AGE COMPS BY SEASON 
+
+#GOM spring 
+
+#arrange data 
+GOM_agecomps_matrix_madmf_spring <- GOM_agecomps_matrix_madmf %>% filter(SEASON == "SPRING") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = GOM_agecomps_matrix_madmf_spring$YEAR
+nyrs = length(years)
+ages = c(0:15)
+ages.lab = as.character(ages)
+n_ages = length(ages)
+
+#calculate proportion-at-age 
+acomp.obs = GOM_agecomps_matrix_madmf_spring %>% select(4:19)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(GOM_agecomps_matrix_madmf_spring)
+
+#plot
+my.title <- paste0("Catch-at-Age for GOM MADMF Spring Survey")
+  origpar <- par(no.readonly = TRUE)
+  par(mar=c(4,4,2,2), oma=c(1,1,1,1), mfrow=c(1,1))
+  scale.catch.obs <- 0.1
+  z3 <- as.matrix(acomp.obs)  * scale.catch.obs
+
+  plot(ages, rev(ages),  xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "Age", ylab = "", type = "n", axes=FALSE)
+  axis(1, at= ages, lab = ages.lab)
+  axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+  box()
+  abline(h=years, col="lightgray")
+  segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+  if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
+                                                    pch = 21)
+
+  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  title (my.title, outer=TRUE, line=-1)
+  par(origpar) 
+  
+#GOM Fall
+  
+#arrange data 
+GOM_agecomps_matrix_madmf_fall <- GOM_agecomps_matrix_madmf %>% filter(SEASON == "FALL") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = GOM_agecomps_matrix_madmf_fall$YEAR
+nyrs = length(years)
+ages = c(0:15)
+ages.lab = as.character(ages)
+n_ages = length(ages)
+
+#calculate proportion-at-age 
+acomp.obs = GOM_agecomps_matrix_madmf_fall %>% select(4:19)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(GOM_agecomps_matrix_madmf_fall)
+
+#plot
+my.title <- paste0("Catch-at-Age for GOM MADMF Fall Survey")
+  origpar <- par(no.readonly = TRUE)
+  par(mar=c(4,4,2,2), oma=c(1,1,1,1), mfrow=c(1,1))
+  scale.catch.obs <- 0.1
+  z3 <- as.matrix(acomp.obs) * scale.catch.obs
+
+  plot(ages, rev(ages),  xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "Age", ylab = "", type = "n", axes=FALSE)
+  axis(1, at= ages, lab = ages.lab)
+  axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+  box()
+  abline(h=years, col="lightgray")
+  segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+  if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
+                                                    pch = 21)
+
+  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  title (my.title, outer=TRUE, line=-1)
+  par(origpar)
+```
+
+#Index catch-at-age code for SNEMA
+```{r}
+bubble.col = "white"
+
+SNEMA_agecomps <- read.csv("~/Desktop/StockAssessmentPracticum/WF_NaturalMortality/STOCKEFF_SV_172905_SNEMA_NONE_strat_mean_age.csv")
+
+#different surveys -> NMFS BTS + MADMF
+
+#NMFS BTS
+
+#turn file into asap matrix format 
+SNEMA_agecomps_filter <- na.omit(SNEMA_agecomps)
+
+SNEMA_agecomps_matrix_nmfs <- SNEMA_agecomps_filter %>%
+  filter(grepl("NMFS", SURVEY)) %>%
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>%
+  pivot_wider(
+    names_from = AGE,
+    values_from = NO_AT_AGE
+  )
+col_nums <- sort(as.numeric(names(SNEMA_agecomps_matrix_nmfs[4:19])))
+SNEMA_agecomps_matrix_nmfs <- SNEMA_agecomps_matrix_nmfs %>%
+  select(STOCK_ABBREV, SEASON, YEAR, all_of(as.character(col_nums)))
+
+#PLOT AGE COMPS BY SEASON 
+
+#SNEMA spring 
+
+#arrange data 
+SNEMA_agecomps_matrix_nmfs_spring <- SNEMA_agecomps_matrix_nmfs %>% filter(SEASON == "SPRING") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = SNEMA_agecomps_matrix_nmfs_spring$YEAR
+nyrs = length(years)
+#ages = c(0:13,15,18)
+ages = c(0:7)
+ages.lab = c(as.character(ages[1:7]), "7+")
+n_ages = length(ages)
+
+#calculate proportion-at-age 
+#acomp.obs = SNEMA_agecomps_matrix_nmfs_spring %>% select(4:19)
+
+acomp.obs = SNEMA_agecomps_matrix_nmfs_spring %>% mutate('7' = rowSums(SNEMA_agecomps_matrix_nmfs_spring[, 11:19], na.rm = TRUE)) %>% select(4:11)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(SNEMA_agecomps_matrix_nmfs_spring)
+
+#plot
+my.title <- paste0("NEFSC Bottom Trawl Survey SNEMA Spring Abundance-at-Age")
+  origpar <- par(no.readonly = TRUE)
+  par(mar=c(4,4,2,2), oma=c(1,1,1,1), mfrow=c(1,1))
+  scale.catch.obs <- 2
+  z3 <- as.matrix(acomp.obs) * scale.catch.obs
+
+  plot(ages, rev(ages),  xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "Age", ylab = "", type = "n", axes=FALSE)
+  axis(1, at= ages, lab = ages.lab)
+  axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+  box()
+  abline(h=years, col="lightgray")
+  segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+  if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
+                                                    pch = 21)
+
+  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  title (my.title, outer=TRUE, line=-1)
+  par(origpar)
+  
+#SNEMA Fall
+  
+#arrange data 
+SNEMA_agecomps_matrix_nmfs_fall <- SNEMA_agecomps_matrix_nmfs %>% filter(SEASON == "FALL") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = SNEMA_agecomps_matrix_nmfs_fall$YEAR
+nyrs = length(years)
+#ages = c(0:13,15, 18)
+ages = c(0:7)
+ages.lab = c(as.character(ages[1:7]), "7+")
+n_ages = length(ages)
+
+#calculate proportion-at-age 
+acomp.obs = SNEMA_agecomps_matrix_nmfs_fall %>% select(4:19)
+
+acomp.obs = SNEMA_agecomps_matrix_nmfs_fall %>% mutate('7' = rowSums(SNEMA_agecomps_matrix_nmfs_fall[, 11:19], na.rm = TRUE)) %>% select(4:11)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(SNEMA_agecomps_matrix_nmfs_fall)
+
+#plot
+my.title <- paste0("NEFSC Bottom Trawl Survey SNEMA Fall Abundance-at-Age")
+  origpar <- par(no.readonly = TRUE)
+  par(mar=c(4,4,2,2), oma=c(1,1,1,1), mfrow=c(1,1))
+  scale.catch.obs <- 2
+  z3 <- as.matrix(acomp.obs) * scale.catch.obs
+
+  plot(ages, rev(ages),  xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "Age", ylab = "", type = "n", axes=FALSE)
+  axis(1, at= ages, lab = ages.lab)
+  axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+  box()
+  abline(h=years, col="lightgray")
+  segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+  if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
+                                                    pch = 21)
+
+  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  title (my.title, outer=TRUE, line=-1)
+  par(origpar)
+  
+#MADMF
+SNEMA_agecomps_filter <- na.omit(SNEMA_agecomps)
+
+SNEMA_agecomps_matrix_madmf <- SNEMA_agecomps_filter %>%
+  filter(grepl("MADMF", SURVEY)) %>%
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>%
+  pivot_wider(
+    names_from = AGE,
+    values_from = NO_AT_AGE
+  )
+col_nums <- sort(as.numeric(names(SNEMA_agecomps_matrix_madmf[4:18])))
+SNEMA_agecomps_matrix_madmf <- SNEMA_agecomps_matrix_madmf %>%
+  select(STOCK_ABBREV, SEASON, YEAR, all_of(as.character(col_nums)))
+
+#PLOT AGE COMPS BY SEASON 
+
+#SNEMA spring 
+
+#arrange data 
+SNEMA_agecomps_matrix_madmf_spring <- SNEMA_agecomps_matrix_madmf %>% filter(SEASON == "SPRING") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = SNEMA_agecomps_matrix_madmf_spring$YEAR
+nyrs = length(years)
+ages = c(1:14,16)
+ages.lab = as.character(ages)
+n_ages = length(ages)
+
+#calculate proportion-at-age 
+acomp.obs = SNEMA_agecomps_matrix_madmf_spring %>% select(4:18)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(SNEMA_agecomps_matrix_madmf_spring)
+
+#plot
+my.title <- paste0("Catch-At-Age for SNEMA MADMF Spring Survey")
+  origpar <- par(no.readonly = TRUE)
+  par(mar=c(4,4,2,2), oma=c(1,1,1,1), mfrow=c(1,1))
+  scale.catch.obs <- 0.5
+  z3 <- as.matrix(acomp.obs) * scale.catch.obs
+
+  plot(ages, rev(ages),  xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "Age", ylab = "", type = "n", axes=FALSE)
+  axis(1, at= ages, lab = ages.lab)
+  axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+  box()
+  abline(h=years, col="lightgray")
+  segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+  if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
+                                                    pch = 21)
+
+  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  title (my.title, outer=TRUE, line=-1)
+  par(origpar)
+```
+
+#CATCH CURVES
+
+#GB catch curve
+```{r}
+#SPRING NMFS 
+Dynamic_Z_GB_NMFS_Spring <- list()
+
+for (i in c(1980:2023)){
+GB_agecomps_nmfs_spring <- GB_agecomps_filter %>% 
+  filter(grepl("NMFS", SURVEY)) %>%
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>% 
+  filter(SEASON == "SPRING")
+
+GB_agecomps_testyear1 <- GB_agecomps_nmfs_spring %>% filter(YEAR == i, AGE == 3) 
+GB_agecomps_testyear2 <- GB_agecomps_nmfs_spring %>% filter(YEAR == i+1, AGE == 4)
+if(i == 2017) next
+if(i == 2019) next
+if(i == 2020) next 
+ChangeinNo <- GB_agecomps_testyear2$NO_AT_AGE-GB_agecomps_testyear1$NO_AT_AGE
+
+GB_agecomps_test_both <- rbind(GB_agecomps_testyear1, GB_agecomps_testyear2)
+cc <- lm(log(NO_AT_AGE)~AGE, data = GB_agecomps_test_both)
+ChangeinZ = coef(cc)[2]
+
+Dynamic_Z_GB_NMFS_Spring[[i]] <- data.frame(year = as.double(paste(GB_agecomps_testyear1$YEAR)), ChangeZ = ChangeinZ, ChangeZAbs = ChangeinZ*-1, ChangeinNoAtAge = ChangeinNo, ChangeinNoAtAgeAbs = ChangeinNo*-1, Stock = paste(GB_agecomps_nmfs_spring[1,]$STOCK_ABBREV), Season = paste(GB_agecomps_nmfs_spring[1,]$SEASON)) 
+}
+
+Dynamic_Z_GB_NMFS_Spring_compile <- rbindlist(Dynamic_Z_GB_NMFS_Spring)
+Dynamic_Z_GB_NMFS_Spring_compile
+
+#FALL NMFS
+Dynamic_Z_GB_NMFS_Fall <- list()
+
+for (i in c(1980:2023)){
+GB_agecomps_nmfs_Fall <- GB_agecomps_filter %>% 
+  filter(grepl("NMFS", SURVEY)) %>%
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>% 
+  filter(SEASON == "FALL")
+
+GB_agecomps_testyear1 <- GB_agecomps_nmfs_Fall %>% filter(YEAR == i, AGE == 3) 
+GB_agecomps_testyear2 <- GB_agecomps_nmfs_Fall %>% filter(YEAR == i+1, AGE == 4)
+if(i == 1989) next
+if(i == 2019) next
+if(i == 2020) next
+ChangeinNo <- GB_agecomps_testyear2$NO_AT_AGE-GB_agecomps_testyear1$NO_AT_AGE
+
+GB_agecomps_test_both <- rbind(GB_agecomps_testyear1, GB_agecomps_testyear2)
+cc <- lm(log(NO_AT_AGE)~AGE, data = GB_agecomps_test_both)
+ChangeinZ = coef(cc)[2]
+
+Dynamic_Z_GB_NMFS_Fall[[i]] <- data.frame(year = as.double(paste(GB_agecomps_testyear1$YEAR)), ChangeZ = ChangeinZ, ChangeZAbs = ChangeinZ*-1, ChangeinNoAtAge = ChangeinNo, ChangeinNoAtAgeAbs = ChangeinNo*-1, Stock = paste(GB_agecomps_nmfs_Fall[1,]$STOCK_ABBREV), Season = paste(GB_agecomps_nmfs_Fall[1,]$SEASON)) 
+}
+
+Dynamic_Z_GB_NMFS_Fall_compile <- rbindlist(Dynamic_Z_GB_NMFS_Fall)
+Dynamic_Z_GB_NMFS_Fall_compile <- na.omit(Dynamic_Z_GB_NMFS_Fall_compile)
+Dynamic_Z_GB_NMFS_Fall_compile
+
+#mean(Dynamic_Z_GB_NMFS_Spring_compile$ChangeZAbs)
+#median(Dynamic_Z_GB_NMFS_Spring_compile$ChangeZAbs)
+
+#mean(Dynamic_Z_GB_NMFS_Fall_compile$ChangeZAbs)
+#median(Dynamic_Z_GB_NMFS_Fall_compile$ChangeZAbs)
+
+#number of negatives spring: 18
+
+#number of negatives fall: 16
+
+#way too many negatives 
+```
+
+#GOM catch curve 
+```{r}
+#SPRING NMFS 
+Dynamic_Z_GOM_NMFS_Spring <- list()
+
+for (i in c(1979:2023)){
+GOM_agecomps_nmfs_spring <- GOM_agecomps_filter %>% 
+  filter(grepl("NMFS", SURVEY)) %>%
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>% 
+  filter(SEASON == "SPRING")
+
+GOM_agecomps_testyear1 <- GOM_agecomps_nmfs_spring %>% filter(YEAR == i, AGE == 3) 
+GOM_agecomps_testyear2 <- GOM_agecomps_nmfs_spring %>% filter(YEAR == i+1, AGE == 4)
+if(i == 2019) next
+if(i == 2020) next 
+if(i == 2022) next
+if(i == 2023) next
+ChangeinNo <- GOM_agecomps_testyear2$NO_AT_AGE-GOM_agecomps_testyear1$NO_AT_AGE
+
+GOM_agecomps_test_both <- rbind(GOM_agecomps_testyear1, GOM_agecomps_testyear2)
+cc <- lm(log(NO_AT_AGE)~AGE, data = GOM_agecomps_test_both)
+ChangeinZ = coef(cc)[2]
+
+Dynamic_Z_GOM_NMFS_Spring[[i]] <- data.frame(year = as.double(paste(GOM_agecomps_testyear1$YEAR)), ChangeZ = ChangeinZ, ChangeZAbs = ChangeinZ*-1, ChangeinNoAtAge = ChangeinNo, ChangeinNoAtAgeAbs = ChangeinNo*-1, Stock = paste(GOM_agecomps_nmfs_spring[1,]$STOCK_ABBREV), Season = paste(GOM_agecomps_nmfs_spring[1,]$SEASON)) 
+}
+
+Dynamic_Z_GOM_NMFS_Spring_compile <- rbindlist(Dynamic_Z_GOM_NMFS_Spring)
+Dynamic_Z_GOM_NMFS_Spring_compile
+
+#FALL NMFS
+Dynamic_Z_GOM_NMFS_Fall <- list()
+
+for (i in c(1979:2023)){
+GOM_agecomps_nmfs_Fall <- GOM_agecomps_filter %>% 
+  filter(grepl("NMFS", SURVEY)) %>%
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>% 
+  filter(SEASON == "FALL")
+
+GOM_agecomps_testyear1 <- GOM_agecomps_nmfs_Fall %>% filter(YEAR == i, AGE == 3) 
+GOM_agecomps_testyear2 <- GOM_agecomps_nmfs_Fall %>% filter(YEAR == i+1, AGE == 4)
+if(i == 2019) next
+if(i == 2020) next
+ChangeinNo <- GOM_agecomps_testyear2$NO_AT_AGE-GOM_agecomps_testyear1$NO_AT_AGE
+
+GOM_agecomps_test_both <- rbind(GOM_agecomps_testyear1, GOM_agecomps_testyear2)
+cc <- lm(log(NO_AT_AGE)~AGE, data = GOM_agecomps_test_both)
+ChangeinZ = coef(cc)[2]
+
+Dynamic_Z_GOM_NMFS_Fall[[i]] <- data.frame(year = as.double(paste(GOM_agecomps_testyear1$YEAR)), ChangeZ = ChangeinZ, ChangeZAbs = ChangeinZ*-1, ChangeinNoAtAge = ChangeinNo, ChangeinNoAtAgeAbs = ChangeinNo*-1, Stock = paste(GOM_agecomps_nmfs_Fall[1,]$STOCK_ABBREV), Season = paste(GOM_agecomps_nmfs_Fall[1,]$SEASON)) 
+}
+
+Dynamic_Z_GOM_NMFS_Fall_compile <- rbindlist(Dynamic_Z_GOM_NMFS_Fall)
+Dynamic_Z_GOM_NMFS_Fall_compile <- na.omit(Dynamic_Z_GOM_NMFS_Fall_compile)
+Dynamic_Z_GOM_NMFS_Fall_compile
+
+#mean(Dynamic_Z_GOM_NMFS_Spring_compile$ChangeZAbs)
+#median(Dynamic_Z_GOM_NMFS_Spring_compile$ChangeZAbs)
+
+#mean(Dynamic_Z_GOM_NMFS_Fall_compile$ChangeZAbs)
+#median(Dynamic_Z_GOM_NMFS_Fall_compile$ChangeZAbs)
+
+#number of negatives spring: 10
+
+#number of negatives fall: 7
+```
+
+#SNEMA catch curve 
+```{r}
+Dynamic_Z_SNEMA_NMFS_Spring <- list()
+
+for (i in c(1980:2023)){
+SNEMA_agecomps_nmfs_spring <- SNEMA_agecomps_filter %>% 
+  filter(grepl("NMFS", SURVEY)) %>%
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>% 
+  filter(SEASON == "SPRING")
+
+SNEMA_agecomps_testyear1 <- SNEMA_agecomps_nmfs_spring %>% filter(YEAR == i, AGE == 3) 
+SNEMA_agecomps_testyear2 <- SNEMA_agecomps_nmfs_spring %>% filter(YEAR == i+1, AGE == 4)
+ChangeinNo <- SNEMA_agecomps_testyear2$NO_AT_AGE-SNEMA_agecomps_testyear1$NO_AT_AGE
+
+SNEMA_agecomps_test_both <- rbind(SNEMA_agecomps_testyear1, SNEMA_agecomps_testyear2)
+cc <- lm(log(NO_AT_AGE)~AGE, data = SNEMA_agecomps_test_both)
+ChangeinZ = coef(cc)[2]
+
+Dynamic_Z_SNEMA_NMFS_Spring[[i]] <- data.frame(year = as.double(paste(SNEMA_agecomps_testyear1$YEAR)), ChangeZ = ChangeinZ, ChangeZAbs = ChangeinZ*-1, ChangeinNoAtAge = ChangeinNo, ChangeinNoAtAgeAbs = ChangeinNo*-1, Stock = paste(SNEMA_agecomps_nmfs_spring[1,]$STOCK_ABBREV), Season = paste(SNEMA_agecomps_nmfs_spring[1,]$SEASON)) 
+}
+
+Dynamic_Z_SNEMA_NMFS_Spring_compile <- rbindlist(Dynamic_Z_SNEMA_NMFS_Spring)
+Dynamic_Z_SNEMA_NMFS_Spring_compile
+
+#FALL NMFS
+Dynamic_Z_SNEMA_NMFS_Fall <- list()
+
+for (i in c(1980:2023)){
+SNEMA_agecomps_nmfs_Fall <- SNEMA_agecomps_filter %>% 
+  filter(grepl("NMFS", SURVEY)) %>%
+select(STOCK_ABBREV, SEASON, YEAR, AGE, NO_AT_AGE) %>% 
+  filter(SEASON == "FALL")
+
+SNEMA_agecomps_testyear1 <- SNEMA_agecomps_nmfs_Fall %>% filter(YEAR == i, AGE == 3) 
+SNEMA_agecomps_testyear2 <- SNEMA_agecomps_nmfs_Fall %>% filter(YEAR == i+1, AGE == 4)
+if(i == 2019) next
+if(i == 2020) next
+ChangeinNo <- SNEMA_agecomps_testyear2$NO_AT_AGE-SNEMA_agecomps_testyear1$NO_AT_AGE
+
+SNEMA_agecomps_test_both <- rbind(SNEMA_agecomps_testyear1, SNEMA_agecomps_testyear2)
+cc <- lm(log(NO_AT_AGE)~AGE, data = SNEMA_agecomps_test_both)
+ChangeinZ = coef(cc)[2]
+
+Dynamic_Z_SNEMA_NMFS_Fall[[i]] <- data.frame(year = as.double(paste(SNEMA_agecomps_testyear1$YEAR)), ChangeZ = ChangeinZ, ChangeZAbs = ChangeinZ*-1, ChangeinNoAtAge = ChangeinNo, ChangeinNoAtAgeAbs = ChangeinNo*-1, Stock = paste(SNEMA_agecomps_nmfs_Fall[1,]$STOCK_ABBREV), Season = paste(SNEMA_agecomps_nmfs_Fall[1,]$SEASON)) 
+}
+
+Dynamic_Z_SNEMA_NMFS_Fall_compile <- rbindlist(Dynamic_Z_SNEMA_NMFS_Fall)
+Dynamic_Z_SNEMA_NMFS_Fall_compile <- na.omit(Dynamic_Z_SNEMA_NMFS_Fall_compile)
+Dynamic_Z_SNEMA_NMFS_Fall_compile
+
+#View(Dynamic_Z_SNEMA_NMFS_Spring_compile)
+
+#mean(Dynamic_Z_SNEMA_NMFS_Spring_compile$ChangeZAbs)
+#median(Dynamic_Z_SNEMA_NMFS_Spring_compile$ChangeZAbs)
+
+#mean(Dynamic_Z_SNEMA_NMFS_Fall_compile$ChangeZAbs)
+#median(Dynamic_Z_SNEMA_NMFS_Fall_compile$ChangeZAbs)
+
+#number of negatives spring: 3
+
+#number of negatives fall: 4
+```
+
+#READ IN WINTER FLOUNDER, PREDATORS AND COMPETITORS FOR CATCH RATE
+```{r}
+NEFSC_species_shipall_catchrate_ <- readRDS("~/Desktop/StockAssessmentPracticum/WF_NaturalMortality/NEFSC_species_allship_catchrate_.rds")
+
+GB_springnumber <- NEFSC_species_shipall_catchrate_$GB_spring %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("num$|year$|Ship$"
+))
+GB_springnumber
+
+GB_springbiomass <- NEFSC_species_shipall_catchrate_$GB_spring %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("wt$|year$|Ship$"
+))
+GB_springbiomass
+
+GB_fallnumber <- NEFSC_species_shipall_catchrate_$GB_fall %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("num$|year$|Ship$"
+))
+GB_fallnumber
+
+GB_fallbiomass <- NEFSC_species_shipall_catchrate_$GB_fall %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("wt$|year$|Ship$"
+))
+GB_fallbiomass
+
+GOM_springnumber <- NEFSC_species_shipall_catchrate_$GOM_spring %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("num$|year$|Ship$"
+))
+GOM_springnumber
+
+GOM_springbiomass <- NEFSC_species_shipall_catchrate_$GOM_spring %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("wt$|year$|Ship$"
+))
+GOM_springbiomass
+
+GOM_fallnumber <- NEFSC_species_shipall_catchrate_$GOM_fall %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("num$|year$|Ship$"
+))
+GOM_fallnumber
+
+GOM_fallbiomass <- NEFSC_species_shipall_catchrate_$GOM_fall %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("wt$|year$|Ship$"
+))
+GOM_fallbiomass
+
+SNEMA_springnumber <- NEFSC_species_shipall_catchrate_$SNEMA_spring %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("num$|year$|Ship$"
+)) %>% filter(!year %in% c(2023))
+SNEMA_springnumber
+
+SNEMA_springbiomass <- NEFSC_species_shipall_catchrate_$SNEMA_spring %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("wt$|year$|Ship$"
+)) %>% filter(!year %in% c(2023))
+SNEMA_springbiomass
+
+SNEMA_fallnumber <- NEFSC_species_shipall_catchrate_$SNEMA_fall %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("num$|year$|Ship$"
+)) %>% filter(!year %in% c(2017))
+SNEMA_fallnumber
+
+SNEMA_fallbiomass <- NEFSC_species_shipall_catchrate_$SNEMA_fall %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("wt$|year$|Ship$"
+)) %>% filter(!year %in% c(2017))
+SNEMA_fallbiomass
+```
+
+#READ IN PREDATORS AND COMPETITORS FOR MORTALITY RATE
+```{r}
+NEFSC_species_shipall_catchrate_ <- readRDS("~/Desktop/StockAssessmentPracticum/WF_NaturalMortality/NEFSC_species_allship_catchrate_.rds")
+
+GOM_springnumber_mortality <- NEFSC_species_shipall_catchrate_$GOM_spring %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("num$|year$|Ship$"
+))
+GOM_springnumber_species_compiler <- GOM_springnumber_mortality %>% inner_join(Dynamic_Z_GOM_NMFS_Spring_compile, by = "year")
+GOM_springnumber_species_compiler
+
+GOM_springbiomass_mortality <- NEFSC_species_shipall_catchrate_$GOM_spring %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("wt$|year$|Ship$"
+))
+GOM_springbiomass_species_compiler <- GOM_springbiomass_mortality %>% inner_join(Dynamic_Z_GOM_NMFS_Spring_compile, by = "year")
+GOM_springbiomass_species_compiler
+
+GOM_fallnumber_mortality <- NEFSC_species_shipall_catchrate_$GOM_fall %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("num$|year$|Ship$"
+))
+GOM_fallnumber_species_compiler <- GOM_fallnumber_mortality %>% inner_join(Dynamic_Z_GOM_NMFS_Fall_compile, by = "year")
+GOM_fallnumber_species_compiler
+
+GOM_fallbiomass_mortality <- NEFSC_species_shipall_catchrate_$GOM_fall %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("wt$|year$|Ship$"
+))
+GOM_fallbiomass_species_compiler <- GOM_fallbiomass_mortality %>% inner_join(Dynamic_Z_GOM_NMFS_Fall_compile, by = "year")
+GOM_fallbiomass_species_compiler
+
+SNEMA_springnumber_mortality <- NEFSC_species_shipall_catchrate_$SNEMA_spring %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("num$|year$|Ship$"
+))
+SNEMA_springnumber_species_compiler <- SNEMA_springnumber_mortality %>% inner_join(Dynamic_Z_SNEMA_NMFS_Spring_compile, by = "year") %>% 
+  #filter(year != 2023)
+  filter(!year %in% c(2022, 2023))
+SNEMA_springnumber_species_compiler
+
+SNEMA_springbiomass_mortality <- NEFSC_species_shipall_catchrate_$SNEMA_spring %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("wt$|year$|Ship$"
+))
+SNEMA_springbiomass_species_compiler <- SNEMA_springbiomass_mortality %>% inner_join(Dynamic_Z_SNEMA_NMFS_Spring_compile, by = "year") %>% 
+  #filter(year != 2023)
+  filter(!year %in% c(2022, 2023))
+SNEMA_springbiomass_species_compiler
+
+SNEMA_fallnumber_mortality <- NEFSC_species_shipall_catchrate_$SNEMA_fall %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("num$|year$|Ship$"
+))
+SNEMA_fallnumber_species_compiler <- SNEMA_fallnumber_mortality %>% inner_join(Dynamic_Z_SNEMA_NMFS_Fall_compile, by = "year") %>% 
+  #filter(year != 2017)
+  filter(!year %in% c(2016, 2017))
+SNEMA_fallnumber_species_compiler
+
+SNEMA_fallbiomass_mortality <- NEFSC_species_shipall_catchrate_$SNEMA_fall %>% mutate(Ship = as.factor(ifelse(year %in% c(1963:2008), "ALB", "BIG"))) %>% select(matches("wt$|year$|Ship$"
+))
+SNEMA_fallbiomass_species_compiler <- SNEMA_fallbiomass_mortality %>% inner_join(Dynamic_Z_SNEMA_NMFS_Fall_compile, by = "year") %>% 
+  #filter(year != 2017)
+  filter(!year %in% c(2016, 2017))
+SNEMA_fallbiomass_species_compiler
+
+```
+
+#Power analysis
+```{r}
+library(pwr)
+
+k <- 1
+alpha <- 0.05
+power <- 0.8 
+
+R2_values <- seq(0.02, 0.5, by = 0.01)  
+
+sample_sizes <- sapply(R2_values, function(R2) {
+  f2 <- R2 / (1 - R2)
+  result <- pwr.f2.test(u = k, f2 = f2, sig.level = alpha, power = power)
+  return(ceiling(result$v + k + 1))  
+})
+sample_size_df <- data.frame(R2 = R2_values, SampleSize = sample_sizes)
+print(sample_size_df)
+
+#catch rate
+nrow(GB_springnumber) #56
+nrow(GB_fallnumber) #61
+
+nrow(GOM_springnumber)  #55
+nrow(GOM_fallnumber) #61
+
+nrow(SNEMA_springnumber) #56
+nrow(SNEMA_fallnumber) #60
+
+#mortality rate
+nrow(GOM_springnumber_species_compiler) #41 
+nrow(GOM_fallnumber_species_compiler) #43 
+
+nrow(SNEMA_springnumber_species_compiler) #42 
+nrow(SNEMA_fallnumber_species_compiler) #40 
+```
+
+#Do fixed group-level intercept regression w/rapid correlation function - catch rate
+```{r}
+#full function with plot
+
+group_reg_allship <- function(data, target_var, other_vars, group_var) {
+  library(ggplot2)
+  library(dplyr)
+  
+  cor_results <- list()
+  
+  for (var in other_vars) {
+    formula <- as.formula(paste(target_var, "~", var, "+", group_var)) #slope or intercept
+    test_result <- lm(formula, data = data)
+    mod_sum <- summary(test_result)
+    f_stat <- mod_sum$fstatistic
+    
+    if (is.null(f_stat)) { next }
+    
+    #p value of species
+    #p_value <- mod_sum$coefficients[11] #this way is honestly fine for the model in its current form unless you add more predictors
+    coef_names <- rownames(mod_sum$coefficients)
+    var_coef_name <- coef_names[startsWith(coef_names, paste0(var))]
+    if (length(var_coef_name) == 0) { 
+      p_value <- NA
+      coef_val <- 0 
+      } 
+    else { 
+    p_value <- mod_sum$coefficients[var_coef_name, "Pr(>|t|)"] 
+    coef_val <- coef(test_result)[var_coef_name] 
+    }
+    
+    #p value of ship 
+    #p_value_ship <- mod_sum$coefficients[12]
+    coef_names <- rownames(mod_sum$coefficients)
+    group_var_name <- coef_names[startsWith(coef_names, paste0(group_var))] 
+    p_value_ship <- mod_sum$coefficients[group_var_name, "Pr(>|t|)"]
+    
+    #model p value
+    p_value_mod <- pf(f_stat[1], f_stat[2], f_stat[3], lower.tail = FALSE)
+    
+    #coefficient
+    coef_val <- coef(test_result)[var]
+    
+    #R2 
+    r_squared = mod_sum$r.squared
+    
+    #get rid of error in cases where p value is low but coef_val = NA because all values for a species are 0 
+    coef_val[is.na(coef_val)] <- 0
+    
+    cor_results[[length(cor_results) + 1]] <- data.frame(
+      Target_Var = target_var,
+      Other_Var = var,
+      R_Squared = mod_sum$r.squared,
+      P_Value = p_value,
+      P_Value_ship = p_value_ship,
+      P_Value_mod = p_value_mod,
+      Coefficient = coef_val
+    )
+    
+    # Plot only if p-value is significant
+    if (!is.na(p_value) && p_value <= 0.05 && coef_val < 0) {
+      
+      # if(!is.na(p_value)) {
+      
+      # Add predicted values to data
+      data_with_pred <- data %>%
+        mutate(predicted = predict(test_result))
+      
+      #clean variable names for plotting 
+      clean_var <- tools::toTitleCase( gsub("_", " ", sub("(_num|_wt)$", "", var)) )
+      if (grepl("Goosefish", clean_var, ignore.case = TRUE)) {clean_var <- "Monkfish"}
+    
+      data_name <- deparse(substitute(data))
+      
+  if (grepl("number", data_name, ignore.case = TRUE)) { datatype <- "Number/tow" } else 
+  if (grepl("biomass", data_name, ignore.case = TRUE)) { datatype <- "kg/tow" }
+      
+  if (grepl("spring", data_name, ignore.case = TRUE)) { season <- "Spring" } else 
+  if (grepl("fall", data_name, ignore.case = TRUE)) { season <- "Fall" }
+      
+  if (grepl("GB_", data_name, ignore.case = TRUE)) { stockregion <- "GB" } else 
+  if (grepl("GOM_", data_name, ignore.case = TRUE)) { stockregion <- "GOM" } else 
+  if (grepl("SNEMA_", data_name, ignore.case = TRUE)) { stockregion <- "SNEMA" }
+
+      #remove spaces between axis labels
+      pred_label <- stringr::str_squish( paste(stockregion, season, clean_var, datatype) )
+      
+      #give name to winter flounder catch rate
+  if (grepl("winter_flounder_num", target_var, ignore.case = TRUE)) { winterflounder_name <- "Winter Flounder Number/tow" } else 
+  if (grepl("winter_flounder_wt", target_var, ignore.case = TRUE)) { winterflounder_name <- "Winter Flounder kg/tow" }
+      
+      #extract levels from group_var
+      group_levels <- levels(factor(data[[group_var]]))
+
+      # Create lm plot
+      ggplot(data_with_pred, aes_string(x = var, y = target_var, color = group_var)) +
+        geom_point() +
+      #geom_text(aes(x = .data[[var]], y = .data[[target_var]], label = year),
+      #           vjust = -0.7, size = 3, color = "black", inherit.aes = FALSE ) + 
+        geom_line(aes(y = predicted), size = 1) +
+        labs(
+          subtitle = paste(" R² =", round(r_squared,3), "| p =", round(p_value, 3)),
+          x = pred_label,
+          y = winterflounder_name
+        ) +
+        theme_minimal() + 
+  scale_color_manual( name = "Survey Ship", 
+                      labels = c( "ALB" = "NOAAS Albatross", 
+                                  "BIG" = "NOAAS Henry B. Bigelow"),
+                      values = c( "ALB" = "#154360",
+                                  "BIG" = "#FFC300")
+                      ) + 
+         theme( legend.position = c(0.95, 0.05), 
+                 legend.justification = c("right", "bottom"), 
+                 legend.background = element_rect(fill = alpha("white", 0.7), 
+                                                  color = NA) )-> plot_obj
+
+      #survey trend plot
+      
+      #match predator/competitor variables and winter flounder variable to linetype 
+      
+      linetype_names <- c("solid", "dashed")
+      names(linetype_names) <- c(pred_label,winterflounder_name)
+      
+      #set automatic scaling of axes
+    scale_factor <- max(data[[var]], na.rm = TRUE) /
+      max(data[[target_var]], na.rm = TRUE)
+
+      #plot
+      ggplot(data, aes(x = year)) +
+        geom_line(aes(y = .data[[var]], 
+                      linetype = pred_label)) + 
+        geom_point(aes(y = .data[[var]])) +
+        geom_line(aes(y = .data[[target_var]] * scale_factor, 
+                linetype = winterflounder_name)) +
+        geom_point(aes(y = .data[[target_var]] * scale_factor)) + 
+        scale_y_continuous(name = pred_label, 
+                      sec.axis = sec_axis( ~ . / scale_factor, 
+                      name = winterflounder_name
+                                           ) ) + 
+  theme_classic() + 
+  xlab("Year") + 
+  scale_linetype_manual( name = "Time Series",
+                         values = linetype_names) + 
+        theme( legend.position = c(0.5, 0.98), 
+                 legend.justification = c("center", "top"), 
+                 legend.background = element_rect(fill = alpha("white", 0.7), 
+                                                  color = NA) ) -> plot_obj2
+
+      #print(plot_obj)
+      #print(plot_obj2)
+
+      combined_plot <- plot_obj | plot_obj2 
+      print(combined_plot)
+     
+      #change path as appropriate  
+      ggsave(filename = file.path("~/Desktop/StockAssessmentPracticum/Figures/CatchRate", paste0("combined_plot_", stockregion,"_",season,"_", var, ".png")), 
+             plot = combined_plot,
+             width = 12, height = 5, dpi = 300)
+    }
+  }
+
+  all_cor_results <- bind_rows(cor_results)
+  return(all_cor_results)
+}
+
+#catch rate
+GB_springnumber <- as_tibble(GB_springnumber) 
+GB_springnumber$Ship <- as.factor(GB_springnumber$Ship)
+target_var <- "winter_flounder_num"
+other_var <- colnames(GB_springnumber[3:32])
+group_var <- "Ship"
+GB_spring_cor_results_allship <- group_reg_allship(GB_springnumber, target_var, other_var, group_var)
+GB_spring_cor <- GB_spring_cor_results_allship %>% mutate(Scen = "GB_spring_lowcorrelation_number")
+correlation_filter_GBspringnumber <-GB_spring_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_GBspringnumber)
+
+GB_springbiomass <- as_tibble(GB_springbiomass) 
+GB_springbiomass$Ship <- as.factor(GB_springbiomass$Ship)
+target_var <- "winter_flounder_wt"
+other_var <- colnames(GB_springbiomass[3:32])
+group_var <- "Ship"
+GB_spring_cor_results_allship <- group_reg_allship(GB_springbiomass, target_var, other_var, group_var)
+GB_spring_cor <- GB_spring_cor_results_allship %>% mutate(Scen = "GOM_spring_lowcorrelation_biomass")
+correlation_filter_GBspringbiomass <-GB_spring_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_GBspringbiomass)
+
+GB_fallnumber <- as_tibble(GB_fallnumber) 
+GB_fallnumber$Ship <- as.factor(GB_fallnumber$Ship)
+target_var <- "winter_flounder_num"
+other_var <- colnames(GB_fallnumber[3:32])
+group_var <- "Ship"
+GB_fall_cor_results_allship <- group_reg_allship(GB_fallnumber, target_var, other_var, group_var)
+GB_fall_cor <- GB_fall_cor_results_allship %>% mutate(Scen = "GB_fall_lowcorrelation_number")
+correlation_filter_GBfallnumber <-GB_fall_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_GBfallnumber)
+
+GB_fallbiomass <- as_tibble(GB_fallbiomass) 
+GB_fallbiomass$Ship <- as.factor(GB_fallbiomass$Ship)
+target_var <- "winter_flounder_wt"
+other_var <- colnames(GB_fallbiomass[3:32])
+group_var <- "Ship"
+GB_fall_cor_results_allship <- group_reg_allship(GB_fallbiomass, target_var, other_var, group_var)
+GB_fall_cor <- GB_fall_cor_results_allship %>% mutate(Scen = "GB_fall_lowcorrelation_biomass")
+correlation_filter_GBfallbiomass <-GB_fall_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_GBfallbiomass)
+
+GOM_springnumber <- as_tibble(GOM_springnumber) 
+GOM_springnumber$Ship <- as.factor(GOM_springnumber$Ship)
+target_var <- "winter_flounder_num"
+other_var <- colnames(GOM_springnumber[3:32])
+group_var <- "Ship"
+GOM_spring_cor_results_allship <- group_reg_allship(GOM_springnumber, target_var, other_var, group_var)
+GOM_spring_cor <- GOM_spring_cor_results_allship %>% mutate(Scen = "GOM_spring_lowcorrelation_number")
+correlation_filter_GOMspringnumber <-GOM_spring_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_GOMspringnumber)
+
+GOM_springbiomass <- as_tibble(GOM_springbiomass) 
+GOM_springbiomass$Ship <- as.factor(GOM_springbiomass$Ship)
+target_var <- "winter_flounder_wt"
+other_var <- colnames(GOM_springbiomass[3:32])
+group_var <- "Ship"
+GOM_spring_cor_results_allship <- group_reg_allship(GOM_springbiomass, target_var, other_var, group_var)
+GOM_spring_cor <- GOM_spring_cor_results_allship %>% mutate(Scen = "GOM_spring_lowcorrelation_biomass")
+correlation_filter_GOMspringbiomass <-GOM_spring_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_GOMspringbiomass)
+
+GOM_fallnumber <- as_tibble(GOM_fallnumber) 
+GOM_fallnumber$Ship <- as.factor(GOM_fallnumber$Ship)
+target_var <- "winter_flounder_num"
+other_var <- colnames(GOM_fallnumber[3:32])
+group_var <- "Ship"
+GOM_fall_cor_results_allship <- group_reg_allship(GOM_fallnumber, target_var, other_var, group_var)
+GOM_fall_cor <- GOM_fall_cor_results_allship %>% mutate(Scen = "GOM_fall_lowcorrelation_number")
+correlation_filter_GOMfallnumber <-GOM_fall_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_GOMfallnumber)
+
+GOM_fallbiomass <- as_tibble(GOM_fallbiomass) 
+GOM_fallbiomass$Ship <- as.factor(GOM_fallbiomass$Ship)
+target_var <- "winter_flounder_wt"
+other_var <- colnames(GOM_fallbiomass[3:32])
+group_var <- "Ship"
+GOM_fall_cor_results_allship <- group_reg_allship(GOM_fallbiomass, target_var, other_var, group_var)
+GOM_fall_cor <- GOM_fall_cor_results_allship %>% mutate(Scen = "GOM_fall_lowcorrelation_biomass")
+correlation_filter_GOMfallbiomass <-GOM_fall_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_GOMfallbiomass)
+
+SNEMA_springnumber <- as_tibble(SNEMA_springnumber)
+SNEMA_springnumber$Ship <- as.factor(SNEMA_springnumber$Ship)
+target_var <- "winter_flounder_num"
+other_var <- colnames(SNEMA_springnumber[3:32])
+group_var <- "Ship"
+SNEMA_spring_cor_results_allship <- group_reg_allship(SNEMA_springnumber, target_var, other_var, group_var)
+SNEMA_spring_cor <- SNEMA_spring_cor_results_allship %>% mutate(Scen = "SNEMA_spring_lowcorrelation_number")
+correlation_filter_SNEMAspringnumber <-SNEMA_spring_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_SNEMAspringnumber)
+
+SNEMA_springbiomass <- as_tibble(SNEMA_springbiomass) 
+SNEMA_springbiomass$Ship <- as.factor(SNEMA_springbiomass$Ship)
+target_var <- "winter_flounder_wt"
+other_var <- colnames(SNEMA_springbiomass[3:32])
+group_var <- "Ship"
+SNEMA_spring_cor_results_allship <- group_reg_allship(SNEMA_springbiomass, target_var, other_var, group_var)
+SNEMA_spring_cor <- SNEMA_spring_cor_results_allship %>% mutate(Scen = "SNEMA_spring_lowcorrelation_biomass")
+correlation_filter_SNEMAspringbiomass <-SNEMA_spring_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_SNEMAspringbiomass)
+
+SNEMA_fallnumber <- as_tibble(SNEMA_fallnumber)
+SNEMA_fallnumber$Ship <- as.factor(SNEMA_fallnumber$Ship)
+target_var <- "winter_flounder_num"
+other_var <- colnames(SNEMA_fallnumber[3:32])
+group_var <- "Ship"
+SNEMA_fall_cor_results_allship <- group_reg_allship(SNEMA_fallnumber, target_var, other_var, group_var)
+SNEMA_fall_cor <- SNEMA_fall_cor_results_allship %>% mutate(Scen = "SNEMA_fall_lowcorrelation_number")
+correlation_filter_SNEMAfallnumber <-SNEMA_fall_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_SNEMAfallnumber)
+
+SNEMA_fallbiomass <- as_tibble(SNEMA_fallbiomass)
+SNEMA_fallbiomass$Ship <- as.factor(SNEMA_fallbiomass$Ship)
+target_var <- "winter_flounder_wt"
+other_var <- colnames(SNEMA_fallbiomass[3:32])
+group_var <- "Ship"
+SNEMA_fall_cor_results_allship <- group_reg_allship(SNEMA_fallbiomass, target_var, other_var, group_var)
+SNEMA_fall_cor <- SNEMA_fall_cor_results_allship %>% mutate(Scen = "SNEMA_fall_lowcorrelation_biomass")
+correlation_filter_SNEMAfallbiomass <-SNEMA_fall_cor %>% filter(P_Value <= 0.05 & Coefficient < 0)
+print(correlation_filter_SNEMAfallbiomass)
+
+combinedd <- rbind(correlation_filter_GBspringnumber, correlation_filter_GBfallnumber, correlation_filter_GBspringbiomass, correlation_filter_GBfallbiomass, correlation_filter_GOMspringnumber, correlation_filter_GOMfallnumber, correlation_filter_GOMspringbiomass, correlation_filter_GOMfallbiomass, correlation_filter_SNEMAspringnumber, correlation_filter_SNEMAfallnumber, correlation_filter_SNEMAspringbiomass, correlation_filter_SNEMAfallbiomass)
+combinedd
+```
+
+#Do fixed group-level intercept regression w/rapid correlation function - mortality rate
+```{r}
+#full function with plot
+group_reg_allship <- function(data, target_var, other_vars, group_var) {
+  library(ggplot2)
+  library(dplyr)
+
+  cor_results <- list()
+
+  for (var in other_vars) {
+    formula <- as.formula(paste(target_var, "~", var, "+", group_var)) #slope or intercept
+    test_result <- lm(formula, data = data)
+    mod_sum <- summary(test_result)
+    f_stat <- mod_sum$fstatistic
+    
+   #p value of species
+   #p_value <- mod_sum$coefficients[11] #this way is honestly fine for the model in its current form unless you add more predictors
+    coef_names <- rownames(mod_sum$coefficients)
+    var_coef_name <- coef_names[startsWith(coef_names, paste0(var))]
+    if (length(var_coef_name) == 0) { 
+      p_value <- NA
+      coef_val <- 0 
+      } 
+    else { 
+    p_value <- mod_sum$coefficients[var_coef_name, "Pr(>|t|)"] 
+    coef_val <- coef(test_result)[var_coef_name] 
+    }
+    
+    #p value of ship 
+    #p_value_ship <- mod_sum$coefficients[12]
+    coef_names <- rownames(mod_sum$coefficients)
+    group_var_name <- coef_names[startsWith(coef_names, paste0(group_var))] 
+    p_value_ship <- mod_sum$coefficients[group_var_name, "Pr(>|t|)"]
+    
+    #model p value
+    p_value_mod <- pf(f_stat[1], f_stat[2], f_stat[3], lower.tail = FALSE)
+    
+    #coefficient
+    coef_val <- coef(test_result)[var]
+    
+    #R2 
+    r_squared = mod_sum$r.squared
+    
+    #get rid of error in cases where p value is low but coef_val = NA because all values for a species are 0 
+    coef_val[is.na(coef_val)] <- 0
+
+    cor_results[[length(cor_results) + 1]] <- data.frame(
+      Target_Var = target_var,
+      Other_Var = var,
+      R_Squared = r_squared,
+      P_Value = p_value,
+      P_Value_ship = p_value_ship,
+      P_Value_mod = p_value_mod,
+      Coefficient = coef_val
+    )
+
+    # Plot only if p-value is significant
+   if (!is.na(p_value) && p_value <= 0.05 && coef_val > 0) {
+    
+    # if(!is.na(p_value)) {
+     
+      # Add predicted values to data
+      data_with_pred <- data %>%
+        mutate(predicted = predict(test_result))
+      
+      #clean variable names for plotting 
+      clean_var <- tools::toTitleCase( gsub("_", " ", sub("(_num|_wt)$", "", var)) )
+      if (grepl("Goosefish", clean_var, ignore.case = TRUE)) {clean_var <- "Monkfish"}
+    
+      data_name <- deparse(substitute(data))
+      
+  if (grepl("number", data_name, ignore.case = TRUE)) { datatype <- "Number/tow" } else 
+  if (grepl("biomass", data_name, ignore.case = TRUE)) { datatype <- "kg/tow" }
+      
+  if (grepl("spring", data_name, ignore.case = TRUE)) { season <- "Spring" } else 
+  if (grepl("fall", data_name, ignore.case = TRUE)) { season <- "Fall" }
+      
+  if (grepl("GB_", data_name, ignore.case = TRUE)) { stockregion <- "GB" } else 
+  if (grepl("GOM_", data_name, ignore.case = TRUE)) { stockregion <- "GOM" } else 
+  if (grepl("SNEMA_", data_name, ignore.case = TRUE)) { stockregion <- "SNEMA" }
+
+      #remove spaces between axis labels
+      pred_label <- stringr::str_squish( paste(stockregion, season, clean_var, datatype) )
+      
+      #give name to winter flounder Z
+      winterflounder_name = "Winter Flounder Mortality Rate (Z)"
+      
+      #extract levels from group_var
+      group_levels <- levels(factor(data[[group_var]]))
+      
+      # Create lm plot
+      ggplot(data_with_pred, aes_string(x = var, y = target_var, color = group_var)) +
+        geom_point() +
+      #geom_text(aes(x = .data[[var]], y = .data[[target_var]], label = year),
+      #           vjust = -0.7, size = 3, color = "black", inherit.aes = FALSE ) + 
+        geom_line(aes(y = predicted), size = 1) +
+        labs(
+          subtitle = paste(" R² =", round(r_squared,3), "| p =", round(p_value, 3)),
+          x = pred_label,
+          y = winterflounder_name
+        ) +
+        theme_minimal() + 
+  scale_color_manual( name = "Survey Ship", 
+                      labels = c( "ALB" = "NOAAS Albatross", 
+                                  "BIG" = "NOAAS Henry B. Bigelow"),
+                      values = c( "ALB" = "#154360",
+                                  "BIG" = "#FFC300")
+                      ) + 
+         theme( legend.position = c(0.95, 0.05), 
+                 legend.justification = c("right", "bottom"), 
+                 legend.background = element_rect(fill = alpha("white", 0.7), 
+                                                  color = NA) ) -> plot_obj
+      
+      #survey trend plot
+      
+      #match predator/competitor variables and winter flounder variable to linetype 
+      
+      linetype_names <- c("solid", "dashed")
+      names(linetype_names) <- c(pred_label,winterflounder_name)
+      
+      #set automatic scaling of axes
+    scale_factor <- max(data[[var]], na.rm = TRUE) /
+      max(data[[target_var]], na.rm = TRUE)
+
+      #plot
+      ggplot(data, aes(x = year)) +
+        geom_line(aes(y = .data[[var]], 
+                      linetype = pred_label)) + 
+        geom_point(aes(y = .data[[var]])) +
+        geom_line(aes(y = .data[[target_var]] * scale_factor, 
+                linetype = winterflounder_name)) +
+        geom_point(aes(y = .data[[target_var]] * scale_factor)) + 
+        scale_y_continuous(name = pred_label, 
+                      sec.axis = sec_axis( ~ . / scale_factor, 
+                      name = winterflounder_name
+                                           ) ) + 
+  theme_classic() + 
+  xlab("Year") + 
+  scale_linetype_manual( name = "Time Series",
+                         values = linetype_names) + 
+        theme( legend.position = c(0.5, 0.98), 
+                 legend.justification = c("center", "top"), 
+                 legend.background = element_rect(fill = alpha("white", 0.7), 
+                                                  color = NA) ) -> plot_obj2
+
+      #print(plot_obj)
+      #print(plot_obj2)
+      
+      combined_plot <- plot_obj | plot_obj2 
+      print(combined_plot)
+      
+     #change path as appropriate
+      ggsave(filename = file.path("~/Desktop/StockAssessmentPracticum/Figures/MortalityRate", paste0("combined_plot_", stockregion,"_",season,"_", var, ".png")), 
+             plot = combined_plot,
+             width = 12, height = 5, dpi = 300)
+    }
+  }
+
+  all_cor_results <- bind_rows(cor_results)
+  return(all_cor_results)
+}
+
+#catch curve 
+GOM_springnumber_species_compiler <- as_tibble(GOM_springnumber_species_compiler)
+GOM_springnumber_species_compiler$Ship <- as.factor(GOM_springnumber_species_compiler$Ship)
+target_var <- "ChangeZAbs"
+other_var <- colnames(GOM_springnumber_species_compiler[3:32])
+group_var <- "Ship"
+GOM_spring_cor_results_allship <- group_reg_allship(GOM_springnumber_species_compiler, target_var, other_var, group_var)
+GOM_spring_cor <- GOM_spring_cor_results_allship %>% mutate(Scen = "GOM_spring_lowcorrelation_number")
+correlation_filter_GOMspringnumber <-GOM_spring_cor %>% filter(P_Value <= 0.05 & Coefficient > 0)
+print(correlation_filter_GOMspringnumber)
+
+GOM_springbiomass_species_compiler <- as_tibble(GOM_springbiomass_species_compiler)
+GOM_springbiomass_species_compiler$Ship <- as.factor(GOM_springbiomass_species_compiler$Ship)
+target_var <- "ChangeZAbs"
+other_var <- colnames(GOM_springbiomass_species_compiler[3:32])
+group_var <- "Ship"
+GOM_spring_cor_results_allship <- group_reg_allship(GOM_springbiomass_species_compiler, target_var, other_var, group_var)
+GOM_spring_cor <- GOM_spring_cor_results_allship %>% mutate(Scen = "GOM_spring_lowcorrelation_biomass")
+correlation_filter_GOMspringbiomass <-GOM_spring_cor %>% filter(P_Value <= 0.05 & Coefficient > 0)
+print(correlation_filter_GOMspringbiomass)
+
+GOM_fallnumber_species_compiler <- as_tibble(GOM_fallnumber_species_compiler) 
+GOM_fallnumber_species_compiler$Ship <- as.factor(GOM_fallnumber_species_compiler$Ship)
+target_var <- "ChangeZAbs"
+other_var <- colnames(GOM_fallnumber_species_compiler[3:32])
+group_var <- "Ship"
+GOM_fall_cor_results_allship <- group_reg_allship(GOM_fallnumber_species_compiler, target_var, other_var, group_var)
+GOM_fall_cor <- GOM_fall_cor_results_allship %>% mutate(Scen = "GOM_fall_lowcorrelation_number")
+correlation_filter_GOMfallnumber <-GOM_fall_cor %>% filter(P_Value <= 0.05 & Coefficient > 0)
+print(correlation_filter_GOMfallnumber)
+
+GOM_fallbiomass_species_compiler <- as_tibble(GOM_fallbiomass_species_compiler) 
+GOM_fallbiomass_species_compiler$Ship <- as.factor(GOM_fallbiomass_species_compiler$Ship)
+target_var <- "ChangeZAbs"
+other_var <- colnames(GOM_fallbiomass_species_compiler[3:32])
+group_var <- "Ship"
+GOM_fall_cor_results_allship <- group_reg_allship(GOM_fallbiomass_species_compiler, target_var, other_var, group_var)
+GOM_fall_cor <- GOM_fall_cor_results_allship %>% mutate(Scen = "GOM_fall_lowcorrelation_biomass")
+correlation_filter_GOMfallbiomass <-GOM_fall_cor %>% filter(P_Value <= 0.05 & Coefficient > 0)
+print(correlation_filter_GOMfallbiomass)
+
+SNEMA_springnumber_species_compiler <- as_tibble(SNEMA_springnumber_species_compiler)
+SNEMA_springnumber_species_compiler$Ship <- as.factor(SNEMA_springnumber_species_compiler$Ship)
+target_var <- "ChangeZAbs"
+other_var <- colnames(SNEMA_springnumber_species_compiler[3:32])
+group_var <- "Ship"
+SNEMA_spring_cor_results_allship <- group_reg_allship(SNEMA_springnumber_species_compiler, target_var, other_var, group_var)
+SNEMA_spring_cor <- SNEMA_spring_cor_results_allship %>% mutate(Scen = "SNEMA_spring_lowcorrelation_number")
+correlation_filter_SNEMAspringnumber <-SNEMA_spring_cor %>% filter(P_Value <= 0.05 & Coefficient > 0)
+print(correlation_filter_SNEMAspringnumber)
+
+SNEMA_springbiomass_species_compiler <- as_tibble(SNEMA_springbiomass_species_compiler) 
+SNEMA_springbiomass_species_compiler$Ship <- as.factor(SNEMA_springbiomass_species_compiler$Ship)
+target_var <- "ChangeZAbs"
+other_var <- colnames(SNEMA_springbiomass_species_compiler[3:32])
+group_var <- "Ship"
+SNEMA_spring_cor_results_allship <- group_reg_allship(SNEMA_springbiomass_species_compiler, target_var, other_var, group_var)
+SNEMA_spring_cor <- SNEMA_spring_cor_results_allship %>% mutate(Scen = "SNEMA_spring_lowcorrelation_biomass")
+correlation_filter_SNEMAspringbiomass <-SNEMA_spring_cor %>% filter(P_Value <= 0.05 & Coefficient > 0)
+print(correlation_filter_SNEMAspringbiomass)
+
+SNEMA_fallnumber_species_compiler <- as_tibble(SNEMA_fallnumber_species_compiler)
+SNEMA_fallnumber_species_compiler$Ship <- as.factor(SNEMA_fallnumber_species_compiler$Ship)
+target_var <- "ChangeZAbs"
+other_var <- colnames(SNEMA_fallnumber_species_compiler[3:32])
+group_var <- "Ship"
+SNEMA_fall_cor_results_allship <- group_reg_allship(SNEMA_fallnumber_species_compiler, target_var, other_var, group_var)
+SNEMA_fall_cor <- SNEMA_fall_cor_results_allship %>% mutate(Scen = "SNEMA_fall_lowcorrelation_number")
+correlation_filter_SNEMAfallnumber <-SNEMA_fall_cor %>% filter(P_Value <= 0.05 & Coefficient > 0)
+print(correlation_filter_SNEMAfallnumber)
+
+SNEMA_fallbiomass_species_compiler <- as_tibble(SNEMA_fallbiomass_species_compiler)
+SNEMA_fallbiomass_species_compiler$Ship <- as.factor(SNEMA_fallbiomass_species_compiler$Ship)
+target_var <- "ChangeZAbs"
+other_var <- colnames(SNEMA_fallbiomass_species_compiler[3:32])
+group_var <- "Ship"
+SNEMA_fall_cor_results_allship <- group_reg_allship(SNEMA_fallbiomass_species_compiler, target_var, other_var, group_var)
+SNEMA_fall_cor <- SNEMA_fall_cor_results_allship %>% mutate(Scen = "SNEMA_fall_lowcorrelation_biomass")
+correlation_filter_SNEMAfallbiomass <-SNEMA_fall_cor %>% filter(P_Value <= 0.05 & Coefficient > 0)
+print(correlation_filter_SNEMAfallbiomass)
+
+combinedd_mortality <- rbind(correlation_filter_GOMspringnumber, correlation_filter_GOMfallnumber, correlation_filter_GOMspringbiomass, correlation_filter_GOMfallbiomass, correlation_filter_SNEMAspringnumber, correlation_filter_SNEMAfallnumber, correlation_filter_SNEMAspringbiomass, correlation_filter_SNEMAfallbiomass)
+combinedd_mortality
+```
+
+#Plots showing numbers of each species - catch rate
+```{r}
+#total number of each species
+
+total_number <- combinedd %>% 
+  mutate(species = stringr::str_remove(Other_Var, "_(wt|num)$"),
+         unit = stringr::str_extract(Other_Var, "_(wt|num)$")) %>% 
+  group_by(species) %>%
+  summarise(count = n())
+
+#without predator or competitor designation
+total_number_plot <- data.frame(
+  NameofSpecies=total_number$species ,  
+  NumberofSpecies= total_number$count)
+
+#with predator or competitor designation for removing those points 
+total_number_plot <- data.frame(
+  NameofSpecies=total_number$species ,  
+  NumberofSpecies= total_number$count,
+  PredorComp = c("Predator", "Competitor", "Competitor", "Competitor", "Both", "Competitor") #this is still hard coded; find some way to automate this later
+  )
+
+#without predator or competitor designation 
+ggplot(total_number_plot, aes(x=NameofSpecies, y=NumberofSpecies)) + 
+  geom_bar(stat = "identity") +
+  ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Catch Rates") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 5)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10))
+
+#with predator or competitor designation 
+ggplot(total_number_plot, aes(x=NameofSpecies, y=NumberofSpecies, fill = PredorComp)) + 
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_manual(values = c("Competitor" = "#154360", "Predator" = "gray", "Both" = "#FFC300")) + 
+  ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Catch Rates") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 8)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10)) + 
+  theme(legend.position = "none") + 
+  guides(fill=guide_legend(title="Predator or Competitor"))
+
+#by abundance or biomass
+
+#abundance
+total_number_num <- combinedd %>% 
+  filter(grepl("_num", Other_Var)) %>%
+  mutate(species = stringr::str_remove(Other_Var, "_(wt|num)$"),
+         unit = stringr::str_extract(Other_Var, "_(wt|num)$")) %>% 
+  group_by(species) %>%
+  summarise(count = n())
+
+#without predator or competitor designation
+total_number_plot_num <- data.frame(
+  NameofSpecies=total_number_num$species ,  
+  NumberofSpecies= total_number_num$count)
+
+#with predator or competitor designation for removing those points 
+total_number_plot_num <- data.frame(
+  NameofSpecies=total_number_num$species ,  
+  NumberofSpecies= total_number_num$count,
+  PredorComp = c("Predator", "Competitor") #hard coded
+  )
+
+#without predator or competitor designation 
+ggplot(total_number_plot_num, aes(x=NameofSpecies, y=NumberofSpecies)) + 
+  geom_bar(stat = "identity") +
+  ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Abundance Catch Rates") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 5)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10))
+
+#with predator or competitor designation 
+ggplot(total_number_plot_num, aes(x=NameofSpecies, y=NumberofSpecies, fill = PredorComp)) + 
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_manual(values = c("Competitor" = "#154360", "Predator" = "gray", "Both" = "#FFC300")) + 
+  ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Abundance Catch Rates") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 8)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10)) + 
+  theme(legend.position = "none") + 
+  guides(fill=guide_legend(title="Predator or Competitor"))
+
+#biomass
+total_number_wt <- combinedd %>% 
+  filter(grepl("_wt", Other_Var)) %>%
+  mutate(species = stringr::str_remove(Other_Var, "_(wt|num)$"),
+         unit = stringr::str_extract(Other_Var, "_(wt|num)$")) %>% 
+  group_by(species) %>%
+  summarise(count = n())
+
+#without predator or competitor designation
+total_number_plot_wt <- data.frame(
+  NameofSpecies=total_number_wt$species ,  
+  NumberofSpecies= total_number_wt$count)
+
+total_number_plot_wt <- data.frame(
+  NameofSpecies=total_number_wt$species ,  
+  NumberofSpecies= total_number_wt$count,
+  PredorComp = c("Predator", "Competitor", "Competitor", "Competitor", "Both", "Competitor") #this is still hard coded; find some way to automate this later
+  )
+
+#without predator or competitor designation 
+ggplot(total_number_plot_wt, aes(x=NameofSpecies, y=NumberofSpecies)) + 
+  geom_bar(stat = "identity") +
+  ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Biomass Catch Rates") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 5)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10))
+
+#with predator or competitor designation 
+ggplot(total_number_plot_wt, aes(x=NameofSpecies, y=NumberofSpecies, fill = PredorComp)) + 
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_manual(values = c("Competitor" = "#154360", "Predator" = "gray", "Both" = "#FFC300")) + 
+  ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Biomass Catch Rates") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 5)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10)) + 
+  theme(legend.position = "none") + 
+  guides(fill=guide_legend(title="Predator or Competitor"))
+```
+
+#Plots showing numbers of each species - mortality rate
+```{r}
+#total number of each species
+
+total_number <- combinedd_mortality %>% 
+  mutate(species = stringr::str_remove(Other_Var, "_(wt|num)$"),
+         unit = stringr::str_extract(Other_Var, "_(wt|num)$")) %>% 
+  group_by(species) %>%
+  summarise(count = n())
+
+#without predator or competitor designation
+total_number_plot <- data.frame(
+  NameofSpecies=total_number$species ,  
+  NumberofSpecies= total_number$count)
+
+#with predator or competitor designation for removing those points <- p value of predator/competitor species
+total_number_plot <- data.frame(
+  NameofSpecies=total_number$species ,  
+  NumberofSpecies= total_number$count,
+  PredorComp = c("Both", "Competitor", "Predator", "Both", "Competitor", "Both", "Both", "Predator", "Both", "Competitor", "Both") #this is still hard coded; find some way to automate this later
+  )
+
+#with predator or competitor designation for removing those points <- overall model p value 
+#total_number_plot <- data.frame(
+  #NameofSpecies=total_number$species ,  
+  #NumberofSpecies= total_number$count,
+  #PredorComp = c("Both", "Predator", "Both", "Competitor", "Both", "Both", "Competitor") #this is still hard coded; find some way to automate this later
+  #)
+
+#without predator or competitor designation 
+ggplot(total_number_plot, aes(x=NameofSpecies, y=NumberofSpecies)) + 
+  geom_bar(stat = "identity") +
+  ggtitle("Species With Significant Positive Relationships (LM) with Winter Flounder Natural Mortality") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 8)) + 
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10))
+
+#with predator or competitor designation 
+ggplot(total_number_plot, aes(x=NameofSpecies, y=NumberofSpecies, fill = PredorComp)) + 
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_manual(values = c("Competitor" = "#154360", "Predator" = "gray", "Both" = "#FFC300")) + 
+  ggtitle("Species With Significant Positive Relationships (LM) with Winter Flounder Natural Mortality") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 8)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10)) + 
+  theme(legend.position = "none") + 
+  guides(fill=guide_legend(title="Predator or Competitor"))
+
+#by abundance or biomass
+
+#abundance
+total_number_num <- combinedd_mortality %>% 
+  filter(grepl("_num", Other_Var)) %>%
+  mutate(species = stringr::str_remove(Other_Var, "_(wt|num)$"),
+         unit = stringr::str_extract(Other_Var, "_(wt|num)$")) %>% 
+  group_by(species) %>%
+  summarise(count = n())
+
+#without predator or competitor designation
+total_number_plot_num <- data.frame(
+  NameofSpecies=total_number_num$species ,  
+  NumberofSpecies= total_number_num$count)
+
+#with predator or competitor designation for removing those points 
+total_number_plot_num <- data.frame(
+  NameofSpecies=total_number_num$species ,  
+  NumberofSpecies= total_number_num$count,
+  PredorComp = c("Predator", "Both", "Competitor", "Both", "Both", "Competitor") #this is still hard coded; find some way to automate this later
+  )
+
+#without predator or competitor designation 
+ggplot(total_number_plot_num, aes(x=NameofSpecies, y=NumberofSpecies)) + 
+  geom_bar(stat = "identity") +
+  ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Mortality Rates") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 5)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10))
+
+#with predator or competitor designation 
+ggplot(total_number_plot_num, aes(x=NameofSpecies, y=NumberofSpecies, fill = PredorComp)) + 
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_manual(values = c("Competitor" = "#154360", "Predator" = "gray", "Both" = "#FFC300")) + 
+  ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Mortality Rates") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 8)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10)) + 
+  theme(legend.position = "none") + 
+  guides(fill=guide_legend(title="Predator or Competitor"))
+
+#biomass
+total_number_wt <- combinedd_mortality %>% 
+  filter(grepl("_wt", Other_Var)) %>%
+  mutate(species = stringr::str_remove(Other_Var, "_(wt|num)$"),
+         unit = stringr::str_extract(Other_Var, "_(wt|num)$")) %>% 
+  group_by(species) %>%
+  summarise(count = n())
+
+#without predator or competitor designation
+total_number_plot_wt <- data.frame(
+  NameofSpecies=total_number_wt$species ,  
+  NumberofSpecies= total_number_wt$count)
+
+total_number_plot_wt <- data.frame(
+  NameofSpecies=total_number_wt$species ,  
+  NumberofSpecies= total_number_wt$count,
+  PredorComp = c("Both", "Competitor", "Predator", "Both", "Competitor", "Both", "Both", "Predator", "Both", "Competitor", "Both") #this is still hard coded; find some way to automate this later
+  )
+
+#without predator or competitor designation 
+ggplot(total_number_plot_wt, aes(x=NameofSpecies, y=NumberofSpecies)) + 
+  geom_bar(stat = "identity") +
+  ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Mortality Rates") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 5)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10))
+
+#with predator or competitor designation 
+ggplot(total_number_plot_wt, aes(x=NameofSpecies, y=NumberofSpecies, fill = PredorComp)) + 
+  geom_bar(stat = "identity", position = "stack") +
+  scale_fill_manual(values = c("Competitor" = "#154360", "Predator" = "gray", "Both" = "#FFC300")) + 
+  ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Mortality Rates") +
+  ylab("Number of instances where p<0.05") +
+  xlab("species name")+
+   coord_cartesian(ylim = c(0, 5)) +
+  theme_classic() +
+    theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
+  theme(plot.title = element_text(size = 10)) + 
+  theme(legend.position = "none") + 
+  guides(fill=guide_legend(title="Predator or Competitor"))
+```
