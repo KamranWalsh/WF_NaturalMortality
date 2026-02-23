@@ -56,7 +56,7 @@ ages = c(0:10)
 ages.lab = c(as.character(ages[1:10]), "10+")
 n_ages = length(ages)
 
-#calculate proportion-at-age 
+#calculate catch-at-age 
 #acomp.obs = GB_agecomps_matrix_spring %>% select(4:24)
 
 acomp.obs = GB_agecomps_matrix_spring %>% mutate('10' = rowSums(GB_agecomps_matrix_spring[, 14:24], na.rm = TRUE)) %>% select(4:14)
@@ -95,7 +95,7 @@ ages = c(0:10)
 ages.lab = c(as.character(ages[1:10]), "10+")
 n_ages = length(ages)
 
-#calculate proportion-at-age 
+#calculate catch-at-age 
 #acomp.obs = GB_agecomps_matrix_fall %>% select(4:24)
 
 acomp.obs = GB_agecomps_matrix_fall %>% mutate('10' = rowSums(GB_agecomps_matrix_fall[, 14:24], na.rm = TRUE)) %>% select(4:14)
@@ -162,7 +162,7 @@ ages = c(0:7)
 ages.lab = c(as.character(ages[1:7]), "7+")
 n_ages = length(ages)
 
-#calculate proportion-at-age 
+#calculate catch-at-age 
 #acomp.obs = GOM_agecomps_matrix_nmfs_spring %>% select(4:19)
 
 acomp.obs = GOM_agecomps_matrix_nmfs_spring %>% mutate('7' = rowSums(GOM_agecomps_matrix_nmfs_spring[, 11:19], na.rm = TRUE)) %>% select(4:11)
@@ -202,7 +202,7 @@ ages = c(0:7)
 ages.lab = c(as.character(ages[1:7]), "7+")
 n_ages = length(ages)
 
-#calculate proportion-at-age 
+#calculate catch-at-age 
 #acomp.obs = GOM_agecomps_matrix_nmfs_fall %>% select(4:19)
 
 acomp.obs = GOM_agecomps_matrix_nmfs_fall %>% mutate('7' = rowSums(GOM_agecomps_matrix_nmfs_fall[, 11:19], na.rm = TRUE)) %>% select(4:11)
@@ -260,7 +260,7 @@ ages = c(0:15)
 ages.lab = as.character(ages)
 n_ages = length(ages)
 
-#calculate proportion-at-age 
+#calculate catch-at-age 
 acomp.obs = GOM_agecomps_matrix_madmf_spring %>% select(4:19)
 names(acomp.obs) <- as.numeric(ages)
 catch.yrs = nrow(GOM_agecomps_matrix_madmf_spring)
@@ -298,7 +298,7 @@ ages = c(0:15)
 ages.lab = as.character(ages)
 n_ages = length(ages)
 
-#calculate proportion-at-age 
+#calculate catch-at-age 
 acomp.obs = GOM_agecomps_matrix_madmf_fall %>% select(4:19)
 names(acomp.obs) <- as.numeric(ages)
 catch.yrs = nrow(GOM_agecomps_matrix_madmf_fall)
@@ -364,7 +364,7 @@ ages = c(0:7)
 ages.lab = c(as.character(ages[1:7]), "7+")
 n_ages = length(ages)
 
-#calculate proportion-at-age 
+#calculate catch-at-age 
 #acomp.obs = SNEMA_agecomps_matrix_nmfs_spring %>% select(4:19)
 
 acomp.obs = SNEMA_agecomps_matrix_nmfs_spring %>% mutate('7' = rowSums(SNEMA_agecomps_matrix_nmfs_spring[, 11:19], na.rm = TRUE)) %>% select(4:11)
@@ -405,7 +405,7 @@ ages = c(0:7)
 ages.lab = c(as.character(ages[1:7]), "7+")
 n_ages = length(ages)
 
-#calculate proportion-at-age 
+#calculate catch-at-age 
 acomp.obs = SNEMA_agecomps_matrix_nmfs_fall %>% select(4:19)
 
 acomp.obs = SNEMA_agecomps_matrix_nmfs_fall %>% mutate('7' = rowSums(SNEMA_agecomps_matrix_nmfs_fall[, 11:19], na.rm = TRUE)) %>% select(4:11)
@@ -461,7 +461,7 @@ ages = c(1:14,16)
 ages.lab = as.character(ages)
 n_ages = length(ages)
 
-#calculate proportion-at-age 
+#calculate catch-at-age 
 acomp.obs = SNEMA_agecomps_matrix_madmf_spring %>% select(4:18)
 names(acomp.obs) <- as.numeric(ages)
 catch.yrs = nrow(SNEMA_agecomps_matrix_madmf_spring)
@@ -1388,7 +1388,7 @@ total_number_plot <- data.frame(
 total_number_plot <- data.frame(
   NameofSpecies=total_number$species ,  
   NumberofSpecies= total_number$count,
-  PredorComp = c("Predator", "Competitor", "Competitor", "Competitor", "Both", "Competitor") #this is still hard coded; find some way to automate this later
+  PredorComp = c("Predator", "Competitor", "Competitor", "Both", "Both", "Competitor") #this is still hard coded; find some way to automate this later
   )
 
 #without predator or competitor designation 
@@ -1479,7 +1479,7 @@ total_number_plot_wt <- data.frame(
 total_number_plot_wt <- data.frame(
   NameofSpecies=total_number_wt$species ,  
   NumberofSpecies= total_number_wt$count,
-  PredorComp = c("Predator", "Competitor", "Competitor", "Competitor", "Both", "Competitor") #this is still hard coded; find some way to automate this later
+  PredorComp = c("Predator", "Competitor", "Competitor", "Both", "Both", "Competitor") #this is still hard coded; find some way to automate this later
   )
 
 #without predator or competitor designation 
