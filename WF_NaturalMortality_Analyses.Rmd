@@ -230,6 +230,63 @@ my.title <- paste0("NEFSC Bottom Trawl Survey GOM Fall Abundance-at-Age")
   legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
   title (my.title, outer=TRUE, line=-1)
   par(origpar)
+  
+### put both in the same plot window 
+origpar <- par(no.readonly = TRUE)
+par(mfrow=c(1, 2), mar=c(3, 1, 3, 0.5), oma=c(4, 4, 2, 1))
+
+# GOM spring
+GOM_agecomps_matrix_nmfs_spring <- GOM_agecomps_matrix_nmfs %>% filter(SEASON == "SPRING") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = GOM_agecomps_matrix_nmfs_spring$YEAR
+nyrs = length(years)
+ages = 0:7
+ages.lab = c(as.character(ages[1:7]), "7+")
+n_ages = length(ages)
+acomp.obs = GOM_agecomps_matrix_nmfs_spring %>% mutate('7' = rowSums(GOM_agecomps_matrix_nmfs_spring[, 11:19], na.rm = TRUE)) %>% select(4:11)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(GOM_agecomps_matrix_nmfs_spring)
+
+z3 <- as.matrix(acomp.obs)
+scale.catch.obs <- 5
+
+plot(ages, rev(ages), xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "", ylab = "", type = "n", axes=FALSE, main="Spring", font.main = 1)
+axis(1, at= ages, lab = ages.lab)
+axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+box()
+abline(h=years, col="lightgray")
+segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", pch = 21)
+
+bubble.legend1 <- c(0.05,0.2,0.4)
+bubble.legend2 <- bubble.legend1 * scale.catch.obs
+legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', bty="n", inset=c(0, -0.06))
+
+#GOM fall
+GOM_agecomps_matrix_nmfs_fall <- GOM_agecomps_matrix_nmfs %>% filter(SEASON == "FALL") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = GOM_agecomps_matrix_nmfs_fall$YEAR
+nyrs = length(years)
+acomp.obs = GOM_agecomps_matrix_nmfs_fall %>% mutate('7' = rowSums(GOM_agecomps_matrix_nmfs_fall[, 11:19], na.rm = TRUE)) %>% select(4:11)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(GOM_agecomps_matrix_nmfs_fall)
+
+z3 <- as.matrix(acomp.obs)
+
+plot(ages, rev(ages), xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "", ylab = "", type = "n", axes=FALSE, main="Fall", font.main = 1)
+axis(1, at= ages, lab = ages.lab)
+axis(2, at = rev(years), labels = FALSE, tick = FALSE)
+box()
+abline(h=years, col="lightgray")
+segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", pch = 21)
+
+legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', bty="n", inset=c(0, -0.06))
+
+mtext("Age", side = 1, outer = TRUE, line = 0.5, cex = 1.2)
+mtext("Year", side = 2, outer = TRUE, line = 2.5, cex = 1.2)
+mtext("NEFSC Bottom Trawl Survey GOM Abundance-at-Age", side = 3, outer = TRUE, line = 0, cex = 1.2, font = 2)
+par(origpar)
 
 #MADMF -> no need to make plus group correction since this isn't going in paper 
 
@@ -433,6 +490,63 @@ my.title <- paste0("NEFSC Bottom Trawl Survey SNEMA Fall Abundance-at-Age")
   legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
   title (my.title, outer=TRUE, line=-1)
   par(origpar)
+  
+### put both in the same plot window 
+origpar <- par(no.readonly = TRUE)
+par(mfrow=c(1, 2), mar=c(3, 1, 3, 0.5), oma=c(4, 4, 2, 1))
+
+# SNEMA spring
+SNEMA_agecomps_matrix_nmfs_spring <- SNEMA_agecomps_matrix_nmfs %>% filter(SEASON == "SPRING") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = GOM_agecomps_matrix_nmfs_spring$YEAR
+nyrs = length(years)
+ages = 0:7
+ages.lab = c(as.character(ages[1:7]), "7+")
+n_ages = length(ages)
+acomp.obs = SNEMA_agecomps_matrix_nmfs_spring %>% mutate('7' = rowSums(SNEMA_agecomps_matrix_nmfs_spring[, 11:19], na.rm = TRUE)) %>% select(4:11)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(SNEMA_agecomps_matrix_nmfs_spring)
+
+z3 <- as.matrix(acomp.obs)
+scale.catch.obs <- 5
+
+plot(ages, rev(ages), xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "", ylab = "", type = "n", axes=FALSE, main="Spring", font.main = 1)
+axis(1, at= ages, lab = ages.lab)
+axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
+box()
+abline(h=years, col="lightgray")
+segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", pch = 21)
+
+bubble.legend1 <- c(0.05,0.2,0.4)
+bubble.legend2 <- bubble.legend1 * scale.catch.obs
+legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', bty="n", inset=c(0, -0.06))
+
+#SNEMA fall
+SNEMA_agecomps_matrix_nmfs_fall <- SNEMA_agecomps_matrix_nmfs %>% filter(SEASON == "FALL") %>%
+  mutate(across(everything(), ~replace(., is.na(.), 0)))
+years = SNEMA_agecomps_matrix_nmfs_fall$YEAR
+nyrs = length(years)
+acomp.obs = SNEMA_agecomps_matrix_nmfs_fall %>% mutate('7' = rowSums(SNEMA_agecomps_matrix_nmfs_fall[, 11:19], na.rm = TRUE)) %>% select(4:11)
+names(acomp.obs) <- as.numeric(ages)
+catch.yrs = nrow(SNEMA_agecomps_matrix_nmfs_fall)
+
+z3 <- as.matrix(acomp.obs)
+
+plot(ages, rev(ages), xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "", ylab = "", type = "n", axes=FALSE, main="Fall", font.main = 1)
+axis(1, at= ages, lab = ages.lab)
+axis(2, at = rev(years), labels = FALSE, tick = FALSE)
+box()
+abline(h=years, col="lightgray")
+segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
+if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", pch = 21)
+
+legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', bty="n", inset=c(0, -0.06))
+
+mtext("Age", side = 1, outer = TRUE, line = 0.5, cex = 1.2)
+mtext("Year", side = 2, outer = TRUE, line = 2.5, cex = 1.2)
+mtext("NEFSC Bottom Trawl Survey SNEMA Abundance-at-Age", side = 3, outer = TRUE, line = 0, cex = 1.2, font = 2)
+par(origpar)
   
 #MADMF
 SNEMA_agecomps_filter <- na.omit(SNEMA_agecomps)
@@ -799,7 +913,8 @@ SNEMA_fallbiomass_species_compiler
 ```{r}
 library(pwr)
 
-k <- 1
+#overall model 
+k <- 2
 alpha <- 0.05
 power <- 0.8 
 
