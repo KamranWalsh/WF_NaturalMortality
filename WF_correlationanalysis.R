@@ -7,7 +7,7 @@ library(purrr)
 library(janitor)
 library(ggplot2)
 
-#sheet for initial correlation analyses for 2025 WF RT TOR1
+#sheet for calculating abundance indices for WF and predators/competitors 
 #use bottom analyses ending in .rds "NEFSC_species_allship_catchrate_.rds" that accounts for tows without fish <- now the only thing in this script 
 
 nefsc_all_spp <- read.csv("~/Desktop/StockAssessmentPracticum/WF_NaturalMortality/nefsc_all_spp.csv")
@@ -17,144 +17,13 @@ nefsc_all_spp_ordered <-  nefsc_all_spp[order(nefsc_all_spp$YEAR),] %>%
   mutate_if(is.numeric, ~ replace(., is.na(.), 0)) #%>% filter(SVVESSEL == "AL") 
 #View(nefsc_all_spp_ordered)
 
-#test functions for extracting info 
-tow_number_GB_test <- nefsc_all_spp_ordered %>%
-  filter(Stock == "GB", SEASON == "FALL", STRATUM %in% c(1130:1210)) 
-unique_tow_number_GB_test <- tow_number_GB_test[!duplicated(tow_number_GB_test[, c("YEAR", "DECDEG_BEGLAT", "DECDEG_BEGLON")]), ] %>%
-  group_by(YEAR) %>% summarize(count = n())
-#View(unique_tow_number_GB_test)
-
-nefsc_all_spp_yt_GBfall <- nefsc_all_spp_ordered %>% 
-  filter(Stock == "GB", COMNAME == "YELLOWTAIL FLOUNDER", 
-         SEASON == "SPRING", STRATUM %in% c(1130:1210), 
-         YEAR %in% c(1963:2013) 
-         ) %>%
-  group_by(YEAR) %>% 
-  summarise(across(c(EXPCATCHNUM, EXPCATCHWT), sum, na.rm = TRUE)) %>% 
-  left_join(unique_tow_number_GB_test, by = c("YEAR")) %>% 
-  mutate(EXPCATCHNUM = EXPCATCHNUM/count, EXPCATCHWT = EXPCATCHWT/count)
-#View(nefsc_all_spp_yt_GBfall)
-plot(nefsc_all_spp_yt_GBfall$EXPCATCHNUM~nefsc_all_spp_yt_GBfall$YEAR, type = "b")
-plot(nefsc_all_spp_yt_GBfall$EXPCATCHWT~nefsc_all_spp_yt_GBfall$YEAR, type = "b")
-
-nefsc_all_spp_sd_GBfall <- nefsc_all_spp_ordered %>% 
-  filter(Stock == "GB", COMNAME == "SPINY DOGFISH", 
-         SEASON == "SPRING", STRATUM %in% c(1130:1210), 
-         YEAR %in% c(1963:2013) 
-  ) %>%
-  group_by(YEAR) %>% 
-  summarise(across(c(EXPCATCHNUM, EXPCATCHWT), sum, na.rm = TRUE)) %>% 
-  left_join(unique_tow_number_GB_test, by = c("YEAR")) %>% 
-  mutate(EXPCATCHNUM = EXPCATCHNUM/count, EXPCATCHWT = EXPCATCHWT/count)
-#View(nefsc_all_spp_sd_GBfall)
-plot(nefsc_all_spp_sd_GBfall$EXPCATCHNUM~nefsc_all_spp_sd_GBfall$YEAR, type = "b")
-plot(nefsc_all_spp_sd_GBfall$EXPCATCHWT~nefsc_all_spp_yt_GBfall$YEAR, type = "b")
-
-plot(nefsc_all_spp_sd_GBfall$EXPCATCHNUM~nefsc_all_spp_yt_GBfall$EXPCATCHNUM)
-plot(nefsc_all_spp_sd_GBfall$EXPCATCHWT~nefsc_all_spp_yt_GBfall$EXPCATCHWT)
-
-#nefsc_all_spp_ordered_scup <-  nefsc_all_spp[order(nefsc_all_spp$YEAR),] %>% 
-#  mutate_if(is.numeric, ~ replace(., is.na(.), 0)) %>% filter(SEASON == "FALL", COMNAME == "SCUP") 
-#View(nefsc_all_spp_ordered_scup)
-
-# COMPARE ALBATROSS W/BIGELOW
-nefsc_all_spp_ordered_AL <-  nefsc_all_spp[order(nefsc_all_spp$YEAR),] %>% 
-  mutate_if(is.numeric, ~ replace(., is.na(.), 0)) %>% group_by(COMNAME) %>%
-  filter(SVVESSEL == "AL") %>% filter(COMNAME %in% species) %>% 
-  summarise(across(c(EXPCATCHNUM, EXPCATCHWT), mean, na.rm = TRUE)) %>%
-  rename(EXPCATCHNUM_AL = EXPCATCHNUM, EXPCATCHWT_AL = EXPCATCHWT)
-hist(nefsc_all_spp_ordered_AL$EXPCATCHNUM_AL)
-
-nefsc_all_spp_ordered_BIG <-  nefsc_all_spp[order(nefsc_all_spp$YEAR),] %>% 
-  mutate_if(is.numeric, ~ replace(., is.na(.), 0)) %>% group_by(COMNAME) %>%
-  filter(SVVESSEL == "HB") %>% filter(COMNAME %in% species) %>% 
-  summarise(across(c(EXPCATCHNUM, EXPCATCHWT), mean, na.rm = TRUE)) %>%
-  rename(EXPCATCHNUM_BIG = EXPCATCHNUM, EXPCATCHWT_BIG = EXPCATCHWT)
-hist(nefsc_all_spp_ordered_BIG$EXPCATCHNUM_BIG)
-
-nefsc_all_spp_ordered_compare <- nefsc_all_spp_ordered_BIG %>% left_join(nefsc_all_spp_ordered_AL, by = "COMNAME")
-#View(nefsc_all_spp_ordered_compare)
-
-#plot albatross vs. bigelow 
-plot(nefsc_all_spp_ordered_compare$EXPCATCHNUM_BIG ~ nefsc_all_spp_ordered_compare$EXPCATCHNUM_AL) + abline(a=0, b=1)
-plot(nefsc_all_spp_ordered_compare$EXPCATCHNUM_BIG ~ nefsc_all_spp_ordered_compare$EXPCATCHNUM_AL, xlim = c(0,40), ylim = c(0,100)) + abline(a=0, b=1)
-
-ggplot() + geom_point(nefsc_all_spp_ordered_compare, mapping = aes(x=EXPCATCHNUM_AL, 
-            y = EXPCATCHNUM_BIG, col = COMNAME)) + geom_abline(slope = 1, intercept = 0) +
-            xlim(0,40) +  ylim(0,100)
-
-#PRINT NAMES 
-print(unique(nefsc_all_spp$COMNAME))
-
-#From lit review: name, number of entries, total # caught; don't trust these specific numbers I just wanted to get a rough sense of how many there were
- #silver hake 15493; 2955185
- #goosefish 6126; 23961
- #american plaice 5045; 159673
- #longhorn sculpin 8959; 297885
- #sea raven 6210; 24206
- #witch flounder 3475; 30963
- #white hake 4544; 44091
- #red hake 10987; 446799
- #haddock 6260; 1286061
- #spiny dogfish 15862; 1238606
- #ocean pout 6535; 63730
- #atlantic cod 6456; 78888
- #cunner 1189; 8063
- #scup 2978; 885068
- #summer flounder 4750; 26016
- #bluefish 1581; 12980
- #striped bass 196; 1175
- #clearnose skate 846; 6299
- #windowpane 8285; 113089
- #yellowtail flounder 8165; 210730
- #fourspot flounder 8651; 172230
- #winter skate -> might aggregate all skates into one category 8297; 171747
- #barndoor skate 2416; 12719
- #little skate 13468; 606886
- #smooth skate 1289; 4300
- #thorny skate 3005; 12297
- #rosette skate 348; 1397
- #striped searobin 1218; 10538
- #spotted hake 5095; 181694
- #weakfish 594; 45343
-
+#list of predators/competitors 
 species <- c("WINTER FLOUNDER", "SILVER HAKE", "GOOSEFISH", "YELLOWTAIL FLOUNDER", "LONGHORN SCULPIN" ,
              "SEA RAVEN", "AMERICAN PLAICE", "WITCH FLOUNDER", "WHITE HAKE", "RED HAKE", "HADDOCK",
              "SPINY DOGFISH", "OCEAN POUT", "ATLANTIC COD", "CUNNER", "SCUP", "SUMMER FLOUNDER", 
              "BLUEFISH", "STRIPED BASS", "WINDOWPANE", "FOURSPOT FLOUNDER", "WINTER SKATE", 
              "BARNDOOR SKATE", "LITTLE SKATE", "SMOOTH SKATE", "THORNY SKATE", "CLEARNOSE SKATE",
              "ROSETTE SKATE", "STRIPED SEAROBIN", "SPOTTED HAKE", "WEAKFISH")
-
-#just to see if any species that we would not expect to have any kind of relationship still show up as having them
-#species <- c("WINTER FLOUNDER", "SILVER HAKE", "GOOSEFISH", "YELLOWTAIL FLOUNDER", "LONGHORN SCULPIN" ,
-#             "SEA RAVEN", "AMERICAN PLAICE", "WITCH FLOUNDER", "WHITE HAKE", "RED HAKE", "HADDOCK",
-#             "SPINY DOGFISH", "OCEAN POUT", "ATLANTIC COD", "CUNNER", "SCUP", "SUMMER FLOUNDER", 
-#             "BLUEFISH", "STRIPED BASS", "WINDOWPANE", "FOURSPOT FLOUNDER", "WINTER SKATE", 
-#             "BARNDOOR SKATE", "LITTLE SKATE", "SMOOTH SKATE", "THORNY SKATE", "CLEARNOSE SKATE",
-             
-#             "SEA SCALLOP", "ATLANTIC MACKEREL", "DAUBED SHANNY", "NORTHERN SHORTFIN SQUID", "BUTTERFISH",
-#             "SMOOTH DOGFISH", "SILVER ANCHOVY", "CAPELIN", "POLLOCK",
-#             "JONAH CRAB", "ATLANTIC HERRING", 
-#             "ALEWIFE", "BLUEBACK HERRING", "AMERICAN SHAD", "NORTHERN SAND LANCE", "ATLANTIC HAGFISH", 
-#             "CUSK")
-
-
-#maybe for literature review look into redfish and cusk? Pollock? 
-
-#make sure all the proper names are correctly filtered out 
-#aggregate by total number per year, stock unit, stratum, etc. 
-#left join the other species' annual abundances by year 
-
-#winterflounder <- nefsc_all_spp %>% filter(COMNAME %in% c("WINTER FLOUNDER")) %>% mutate(Species = "Winter Flounder")
-#winterflounder <- winterflounder[order(winterflounder$YEAR),]
-#View(winterflounder)
-
-#winterflounder_GB_spring <- winterflounder %>% filter(Stock == "GB") %>% 
-#  filter(SEASON == "SPRING") %>% 
-#  select(YEAR, EXPCATCHNUM, EXPCATCHWT) %>%
-#  group_by(YEAR) %>%
-#  summarise(across(c(EXPCATCHNUM, EXPCATCHWT), sum, na.rm = TRUE)) %>% 
-#  rename(WinterFlounder_Num = EXPCATCHNUM, WinterFlounder_Wt = EXPCATCHWT)
 
 ############### MEAN NUMBER PER TOW TOTAL ######################
 # accounts for tows with no fish 
@@ -430,5 +299,5 @@ NEFSC_species <- list(
 #View(NEFSC_species$GB_spring)
 
 #save file for subsequent analyses 
-saveRDS(NEFSC_species, "~/Desktop/StockAssessmentPracticum/WF_NaturalMortality/NEFSC_species_allship_catchrate_.rds")
+#saveRDS(NEFSC_species, "~/Desktop/StockAssessmentPracticum/WF_NaturalMortality/NEFSC_species_allship_catchrate_.rds")
 
