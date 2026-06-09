@@ -740,9 +740,11 @@ Dynamic_Z_GOM_NMFS_Fall_compile <- na.omit(Dynamic_Z_GOM_NMFS_Fall_compile)
 Dynamic_Z_GOM_NMFS_Fall_compile
 
 #mean(Dynamic_Z_GOM_NMFS_Spring_compile$ChangeZAbs)
+#sd(Dynamic_Z_GOM_NMFS_Spring_compile$ChangeZAbs)
 #median(Dynamic_Z_GOM_NMFS_Spring_compile$ChangeZAbs)
 
 #mean(Dynamic_Z_GOM_NMFS_Fall_compile$ChangeZAbs)
+#sd(Dynamic_Z_GOM_NMFS_Fall_compile$ChangeZAbs)
 #median(Dynamic_Z_GOM_NMFS_Fall_compile$ChangeZAbs)
 
 #number of negatives spring: 10
@@ -803,9 +805,11 @@ Dynamic_Z_SNEMA_NMFS_Fall_compile
 #View(Dynamic_Z_SNEMA_NMFS_Spring_compile)
 
 #mean(Dynamic_Z_SNEMA_NMFS_Spring_compile$ChangeZAbs)
+#sd(Dynamic_Z_SNEMA_NMFS_Spring_compile$ChangeZAbs)
 #median(Dynamic_Z_SNEMA_NMFS_Spring_compile$ChangeZAbs)
 
 #mean(Dynamic_Z_SNEMA_NMFS_Fall_compile$ChangeZAbs)
+#sd(Dynamic_Z_SNEMA_NMFS_Fall_compile$ChangeZAbs)
 #median(Dynamic_Z_SNEMA_NMFS_Fall_compile$ChangeZAbs)
 
 #number of negatives spring: 3
@@ -1509,7 +1513,16 @@ total_number_plot <- data.frame(
   NameofSpecies=total_number$species ,  
   NumberofSpecies= total_number$count,
   PredorComp = c("Predator", "Competitor", "Competitor", "Both", "Both", "Competitor") #this is still hard coded; find some way to automate this later
-  )
+  ) %>% 
+  mutate(NameofSpecies = recode(NameofSpecies,
+                                "goosefish" = "monkfish",
+                                "rosette_skate" = "rosette skate",
+                                "thorny_skate" = "thorny skate",
+                                "white_hake" = "white hake",
+                                "witch_flounder" = "witch flounder"
+                                )) #%>%
+  #arrange(desc(NumberofSpecies), NameofSpecies) %>%
+  #mutate(NameofSpecies = factor(NameofSpecies, levels = NameofSpecies))
 
 #without predator or competitor designation 
 #ggplot(total_number_plot, aes(x=NameofSpecies, y=NumberofSpecies)) + 
@@ -1523,13 +1536,14 @@ total_number_plot <- data.frame(
   #theme(plot.title = element_text(size = 10))
 
 #with predator or competitor designation 
+
 ggplot(total_number_plot, aes(x=NameofSpecies, y=NumberofSpecies, fill = PredorComp)) + 
   geom_bar(stat = "identity", position = "stack") +
   scale_fill_manual(values = c("Competitor" = "#154360", "Predator" = "gray", "Both" = "#FFC300")) + 
   ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Catch Rates") +
   ylab("Number of instances where p<0.05") +
   xlab("species name")+
-   coord_cartesian(ylim = c(0, 8)) +
+   coord_cartesian(ylim = c(0, 5)) +
   theme_classic() +
     theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
   theme(plot.title = element_text(size = 10)) + 
@@ -1556,7 +1570,10 @@ total_number_plot_num <- data.frame(
   NameofSpecies=total_number_num$species ,  
   NumberofSpecies= total_number_num$count,
   PredorComp = c("Predator", "Competitor") #hard coded
-  )
+  ) %>% 
+  mutate(NameofSpecies = recode(NameofSpecies,
+                                "goosefish" = "monkfish"
+                                ))
 
 #without predator or competitor designation 
 #ggplot(total_number_plot_num, aes(x=NameofSpecies, y=NumberofSpecies)) + 
@@ -1576,7 +1593,7 @@ ggplot(total_number_plot_num, aes(x=NameofSpecies, y=NumberofSpecies, fill = Pre
   ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Abundance Catch Rates") +
   ylab("Number of instances where p<0.05") +
   xlab("species name")+
-   coord_cartesian(ylim = c(0, 8)) +
+   coord_cartesian(ylim = c(0, 5)) +
   theme_classic() +
     theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
   theme(plot.title = element_text(size = 10)) + 
@@ -1600,7 +1617,16 @@ total_number_plot_wt <- data.frame(
   NameofSpecies=total_number_wt$species ,  
   NumberofSpecies= total_number_wt$count,
   PredorComp = c("Predator", "Competitor", "Competitor", "Both", "Both", "Competitor") #this is still hard coded; find some way to automate this later
-  )
+  ) %>% 
+  mutate(NameofSpecies = recode(NameofSpecies,
+                                "goosefish" = "monkfish",
+                                "rosette_skate" = "rosette skate",
+                                "thorny_skate" = "thorny skate",
+                                "white_hake" = "white hake",
+                                "witch_flounder" = "witch flounder"
+                                )) #%>%
+  #arrange(desc(NumberofSpecies), NameofSpecies) %>%
+  #mutate(NameofSpecies = factor(NameofSpecies, levels = NameofSpecies))
 
 #without predator or competitor designation 
 #ggplot(total_number_plot_wt, aes(x=NameofSpecies, y=NumberofSpecies)) + 
@@ -1648,7 +1674,20 @@ total_number_plot <- data.frame(
   NameofSpecies=total_number$species ,  
   NumberofSpecies= total_number$count,
   PredorComp = c("Both", "Competitor", "Predator", "Both", "Competitor", "Both", "Both", "Predator", "Both", "Competitor", "Both") #this is still hard coded; find some way to automate this later
-  )
+  ) %>% 
+  mutate(NameofSpecies = recode(NameofSpecies,
+                                "atlantic_cod" = "Atlantic cod",
+                                "goosefish" = "Monkfish",
+                                "longhorn_sculpin" = "longhorn sculpin",
+                                "ocean_pout" = "ocean pout",
+                                "red_hake" = "red hake",
+                                "silver_hake" = "silver hake",
+                                "spiny_dogfish" = "spiny dogfish", 
+                                "white_hake" = "white hake",
+                                "winter_skate" = "winter skate"
+                                )) #%>%
+  #arrange(desc(NumberofSpecies), NameofSpecies) %>%
+  #mutate(NameofSpecies = factor(NameofSpecies, levels = NameofSpecies))
 
 #with predator or competitor designation for removing those points <- overall model p value 
 #total_number_plot <- data.frame(
@@ -1675,7 +1714,7 @@ ggplot(total_number_plot, aes(x=NameofSpecies, y=NumberofSpecies, fill = PredorC
   ggtitle("Species With Significant Positive Relationships (LM) with Winter Flounder Natural Mortality") +
   ylab("Number of instances where p<0.05") +
   xlab("species name")+
-   coord_cartesian(ylim = c(0, 8)) +
+   coord_cartesian(ylim = c(0, 5)) +
   theme_classic() +
     theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
   theme(plot.title = element_text(size = 10)) + 
@@ -1702,7 +1741,16 @@ total_number_plot_num <- data.frame(
   NameofSpecies=total_number_num$species ,  
   NumberofSpecies= total_number_num$count,
   PredorComp = c("Predator", "Both", "Competitor", "Both", "Both", "Competitor") #this is still hard coded; find some way to automate this later
-  )
+  ) %>% 
+  mutate(NameofSpecies = recode(NameofSpecies,
+                                "goosefish" = "monkfish",
+                                "longhorn_sculpin" = "longhorn sculpin",
+                                "ocean_pout" = "ocean pout",
+                                "red_hake" = "red hake",
+                                "white_hake" = "white hake"
+                                )) #%>%
+  #arrange(desc(NumberofSpecies), NameofSpecies) %>%
+  #mutate(NameofSpecies = factor(NameofSpecies, levels = NameofSpecies))
 
 #without predator or competitor designation 
 #ggplot(total_number_plot_num, aes(x=NameofSpecies, y=NumberofSpecies)) + 
@@ -1722,7 +1770,7 @@ ggplot(total_number_plot_num, aes(x=NameofSpecies, y=NumberofSpecies, fill = Pre
   ggtitle("Species With Significant Negative Relationships (LM) with Winter Flounder Mortality Rates") +
   ylab("Number of instances where p<0.05") +
   xlab("species name")+
-   coord_cartesian(ylim = c(0, 8)) +
+   coord_cartesian(ylim = c(0, 5)) +
   theme_classic() +
     theme(axis.title.x = element_blank(), axis.text.x = element_text(size=9, angle = 45, hjust = 1)) +
   theme(plot.title = element_text(size = 10)) + 
@@ -1746,7 +1794,20 @@ total_number_plot_wt <- data.frame(
   NameofSpecies=total_number_wt$species ,  
   NumberofSpecies= total_number_wt$count,
   PredorComp = c("Both", "Competitor", "Predator", "Both", "Competitor", "Both", "Both", "Predator", "Both", "Competitor", "Both") #this is still hard coded; find some way to automate this later
-  )
+  ) %>% 
+  mutate(NameofSpecies = recode(NameofSpecies,
+                                "atlantic_cod" = "Atlantic cod",
+                                "goosefish" = "monkfish",
+                                "longhorn_sculpin" = "longhorn sculpin",
+                                "ocean_pout" = "ocean pout",
+                                "red_hake" = "red hake",
+                                "silver_hake" = "silver hake",
+                                "spiny_dogfish" = "spiny dogfish", 
+                                "white_hake" = "white hake",
+                                "winter_skate" = "winter skate"
+                                )) #%>%
+  #arrange(desc(NumberofSpecies), NameofSpecies) %>%
+  #mutate(NameofSpecies = factor(NameofSpecies, levels = NameofSpecies))
 
 #without predator or competitor designation 
 #ggplot(total_number_plot_wt, aes(x=NameofSpecies, y=NumberofSpecies)) + 
