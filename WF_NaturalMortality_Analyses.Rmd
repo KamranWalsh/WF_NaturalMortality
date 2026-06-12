@@ -80,9 +80,9 @@ my.title <- paste0("Catch-at-Age for GB NMFS Spring Survey")
   if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black",# bg = bubble.col,
                                                     pch = 21)
 
-  bubble.legend1 <- c(0.05,0.2,0.4)
-  bubble.legend2 <- bubble.legend1 * scale.catch.obs
-  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  bubble.legend1 <- c(0.5,1.5,2.5)
+  #bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend1, horiz=T , col='black', pt.bg = bubble.col)
   title (my.title, outer=TRUE, line=-1)
   par(origpar)
   
@@ -119,9 +119,9 @@ my.title <- paste0("Catch-at-Age for GB NMFS Fall Survey")
   if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black",# bg = bubble.col,
                                                     pch = 21)
 
-  bubble.legend1 <- c(0.05,0.2,0.4)
-  bubble.legend2 <- bubble.legend1 * scale.catch.obs
-  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  bubble.legend1 <- c(0.5,1.5,2.5)
+  #bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend1, horiz=T , col='black', pt.bg = bubble.col)
   title (my.title, outer=TRUE, line=-1)
   par(origpar)
 ```
@@ -176,7 +176,7 @@ my.title <- paste0("NEFSC Bottom Trawl Survey GOM Spring Abundance-at-Age")
   par(mar=c(4,4,2,2), oma=c(1,1,1,1), mfrow=c(1,1))
   scale.catch.obs <- 5
   z3 <- as.matrix(acomp.obs) # * scale.catch.obs
-
+  
   plot(ages, rev(ages),  xlim = range(ages), ylim = c(years[nyrs],(years[1]-2)), xlab = "Age", ylab = "", type = "n", axes=FALSE)
   axis(1, at= ages, lab = ages.lab)
   axis(2, at = rev(years), lab = rev(years), cex.axis=0.75, las=1)
@@ -185,10 +185,11 @@ my.title <- paste0("NEFSC Bottom Trawl Survey GOM Spring Abundance-at-Age")
   segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
   if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
                                                     pch = 21)
-
-  bubble.legend1 <- c(0.05,0.2,0.4)
-  bubble.legend2 <- bubble.legend1 * scale.catch.obs
-  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  
+  bubble.legend1 <- c(0.5,1.5,2.5)
+  #bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend1, horiz=T , col='black', pt.bg = bubble.col)
   title (my.title, outer=TRUE, line=-1)
   par(origpar)
   
@@ -226,9 +227,9 @@ my.title <- paste0("NEFSC Bottom Trawl Survey GOM Fall Abundance-at-Age")
   if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
                                                     pch = 21)
 
-  bubble.legend1 <- c(0.05,0.2,0.4)
-  bubble.legend2 <- bubble.legend1 * scale.catch.obs
-  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
+  bubble.legend1 <- c(0.5,1.5,2.5)
+  #bubble.legend2 <- bubble.legend1 * scale.catch.obs
+  legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend1, horiz=T , col='black', pt.bg = bubble.col)
   title (my.title, outer=TRUE, line=-1)
   par(origpar)
   
@@ -262,9 +263,9 @@ abline(h=years, col="lightgray")
 segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
 if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", pch = 21)
 
-bubble.legend1 <- c(0.05,0.2,0.4)
-bubble.legend2 <- bubble.legend1 * scale.catch.obs
-legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', bty="n", inset=c(0, 0))
+bubble.legend1 <- c(0.5,1.5,2.5)
+#bubble.legend2 <- bubble.legend1 * scale.catch.obs
+legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend1, horiz=T , col='black', bty="n", inset=c(0, 0))
 
 #GOM fall
 GOM_agecomps_matrix_nmfs_fall <- GOM_agecomps_matrix_nmfs %>% filter(SEASON == "FALL") %>%
@@ -285,7 +286,7 @@ abline(h=years, col="lightgray")
 segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
 if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", pch = 21)
 
-legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', bty="n", inset=c(0, 0))
+legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend1, horiz=T , col='black', bty="n", inset=c(0, 0))
 
 mtext("Age", side = 1, outer = TRUE, line = 0.5, cex = 1.2)
 mtext("Year", side = 2, outer = TRUE, line = 2.5, cex = 1.2)
@@ -343,7 +344,7 @@ my.title <- paste0("Catch-at-Age for GOM MADMF Spring Survey")
   segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
   if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
                                                     pch = 21)
-
+  
   bubble.legend1 <- c(0.05,0.2,0.4)
   bubble.legend2 <- bubble.legend1 * scale.catch.obs
   legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
@@ -387,6 +388,7 @@ my.title <- paste0("Catch-at-Age for GOM MADMF Fall Survey")
   legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
   title (my.title, outer=TRUE, line=-1)
   par(origpar)
+  
 ```
 
 #Index catch-at-age code for SNEMA
@@ -450,7 +452,7 @@ my.title <- paste0("NEFSC Bottom Trawl Survey SNEMA Spring Abundance-at-Age")
   if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
                                                     pch = 21)
 
-  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend1 <- c(0.5,1.5,2.5)
   bubble.legend2 <- bubble.legend1 * scale.catch.obs
   legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
   title (my.title, outer=TRUE, line=-1)
@@ -491,7 +493,7 @@ my.title <- paste0("NEFSC Bottom Trawl Survey SNEMA Fall Abundance-at-Age")
   if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", #bg = bubble.col,
                                                     pch = 21)
 
-  bubble.legend1 <- c(0.05,0.2,0.4)
+  bubble.legend1 <- c(0.5,1.5,2.5)
   bubble.legend2 <- bubble.legend1 * scale.catch.obs
   legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', pt.bg = bubble.col)
   title (my.title, outer=TRUE, line=-1)
@@ -527,9 +529,9 @@ abline(h=years, col="lightgray")
 segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
 if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", pch = 21)
 
-bubble.legend1 <- c(0.05,0.2,0.4)
-bubble.legend2 <- bubble.legend1 * scale.catch.obs
-legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', bty="n", inset=c(0, 0))
+bubble.legend1 <- c(0.5,1.5,2.5)
+#bubble.legend2 <- bubble.legend1 * scale.catch.obs
+legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend1, horiz=T , col='black', bty="n", inset=c(0, 0))
 
 #SNEMA fall
 SNEMA_agecomps_matrix_nmfs_fall <- SNEMA_agecomps_matrix_nmfs %>% filter(SEASON == "FALL") %>%
@@ -550,7 +552,7 @@ abline(h=years, col="lightgray")
 segments(x0=ages, y0=rep(years[1],n_ages), x1=ages, y1=rep(years[nyrs],n_ages), col = "lightgray", lty = 1)
 if (length(catch.yrs)>0) for (j in 1:nyrs) points(ages, rep(years[j], n_ages), cex=z3[j,], col="black", pch = 21)
 
-legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend2, horiz=T , col='black', bty="n", inset=c(0, 0))
+legend("topright", xpd=TRUE, legend=bubble.legend1, pch=rep(21, 3), pt.cex=bubble.legend1, horiz=T , col='black', bty="n", inset=c(0, 0))
 
 mtext("Age", side = 1, outer = TRUE, line = 0.5, cex = 1.2)
 mtext("Year", side = 2, outer = TRUE, line = 2.5, cex = 1.2)
